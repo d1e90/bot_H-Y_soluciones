@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//data/.openclaw/workspace/**)",
+      "Bash(xdg-open \"/root/H&Y MUNDO SERVICIOS/reporte-completo-52.html\")",
+      "Bash(google-chrome \"/root/H&Y MUNDO SERVICIOS/reporte-completo-52.html\")",
+      "Bash(chromium-browser \"/root/H&Y MUNDO SERVICIOS/reporte-completo-52.html\")",
+      "Bash(pkill -f \"python3 -m http.server\")",
+      "Bash(browser-sync start *)",
+      "Bash(which google-chrome *)",
+      "Read(//usr/lib/**)",
+      "Bash(apt-cache show *)"
+    ]
+  }
+}

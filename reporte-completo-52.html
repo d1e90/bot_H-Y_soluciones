@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte #52 — Informe Técnico — H&Y Mundo Servicios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:       #0D1B2A;
+            --blue:       #0052A3;
+            --blue-light: #D6E8F8;
+            --gold:       #C9A84C;
+            --gold-light: #F0D98C;
+            --gold-bg:    #FBF5E6;
+            --red:        #C1272D;
+            --gray-1:     #EEF1F6;
+            --gray-2:     #D8DCE6;
+            --gray-3:     #B0B8C8;
+            --gray-4:     #6B7789;
+            --text:       #0D1B2A;
+            --text-soft:  #3A4A5C;
+            --green:      #145C38;
+            --green-bg:   #E0F0E8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #CBD0DA;
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* ── DOCUMENTO A4 ── */
+        .doc {
+            width: 794px;
+            margin: 32px auto;
+            background: #F4F6FA;
+            box-shadow: 0 8px 48px rgba(0,0,0,0.22);
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--navy);
+            padding: 0;
+            display: flex;
+            align-items: stretch;
+            min-height: 110px;
+        }
+
+        .header-logo-wrap {
+            background: #fff;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 170px;
+        }
+
+        .header-logo-wrap img {
+            height: 72px;
+            width: auto;
+            display: block;
+        }
+
+        .header-divider {
+            width: 3px;
+            background: var(--gold);
+        }
+
+        .header-body {
+            flex: 1;
+            padding: 20px 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .header-body .doc-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 6px;
+        }
+
+        .header-body h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+
+        .header-body .header-sub {
+            font-size: 11px;
+            color: rgba(255,255,255,0.55);
+            font-weight: 400;
+        }
+
+        .header-meta {
+            padding: 20px 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 6px;
+            border-left: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .meta-badge {
+            background: var(--gold);
+            color: var(--navy);
+            font-size: 20px;
+            font-weight: 800;
+            padding: 6px 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .meta-tipo {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .meta-fecha {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        /* ── FRANJA ORO ── */
+        .gold-stripe {
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+        }
+
+        /* ── RESUMEN EJECUTIVO ── */
+        .exec-summary {
+            background: var(--navy);
+            border-bottom: 4px solid var(--gold);
+            padding: 22px 32px;
+        }
+
+        .exec-summary-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 14px;
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-top: 3px solid var(--blue);
+            padding: 16px 18px;
+        }
+
+        .kpi-card.gold  { border-top-color: var(--gold); }
+        .kpi-card.green { border-top-color: #2ECC82; }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .kpi-value.green  { color: #2ECC82; }
+        .kpi-value.gold-c { color: var(--gold-light); }
+
+        .kpi-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── SECCIONES ── */
+        .section {
+            padding: 28px 32px;
+            border-bottom: 2px solid var(--gray-2);
+            background: #fff;
+        }
+
+        .section:nth-child(odd) {
+            background: #F4F7FB;
+        }
+
+        .section:last-child { border-bottom: none; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--blue-light);
+        }
+
+        .section-num {
+            width: 26px;
+            height: 26px;
+            background: var(--blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex: 1;
+        }
+
+        .section-badge {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            background: var(--blue-light);
+            border: 1px solid #B8D6F2;
+            color: var(--blue);
+        }
+
+        /* ── INFO GRID ── */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px;
+            background: var(--gray-2);
+            border: 2px solid var(--gray-2);
+        }
+
+        .info-cell {
+            background: #fff;
+            padding: 14px 18px;
+        }
+
+        .info-cell:nth-child(odd) { background: var(--blue-light); }
+
+        .info-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .info-value.highlight {
+            color: var(--blue);
+            font-weight: 700;
+        }
+
+        .tipo-tag {
+            display: inline-block;
+            background: var(--navy);
+            color: var(--gold-light);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 5px 12px;
+        }
+
+        /* ── EQUIPO ── */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .team-card {
+            border: 1px solid var(--gray-2);
+            border-left: 4px solid var(--gold);
+            padding: 18px 20px;
+            background: var(--gray-1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .team-role {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 6px;
+        }
+
+        .team-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-bottom: 10px;
+        }
+
+        .team-detail {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin: 4px 0;
+        }
+
+        .cert-tag {
+            display: inline-block;
+            margin-top: 10px;
+            background: var(--green-bg);
+            color: var(--green);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border: 1px solid #8ECFAA;
+        }
+
+        /* ── TABLA INSUMOS ── */
+        .insumos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .insumos-table thead tr {
+            background: var(--navy);
+        }
+
+        .insumos-table th {
+            padding: 11px 14px;
+            text-align: left;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .insumos-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--gray-2);
+            font-size: 12px;
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        .insumos-table tbody tr:nth-child(even) td {
+            background: var(--gray-1);
+        }
+
+        .prod-name {
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .prod-type {
+            font-size: 11px;
+            color: var(--gray-4);
+            margin-top: 2px;
+        }
+
+        .lote-tag {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue);
+            background: #EBF3FC;
+            padding: 3px 8px;
+            border: 1px solid #C2D9F0;
+            letter-spacing: 0.5px;
+        }
+
+        .status-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .dot.green { background: var(--green); }
+        .dot.red   { background: var(--red); }
+
+        .status-dot.ok   { color: var(--green); }
+        .status-dot.warn { color: var(--red); }
+
+        .conc-value {
+            font-weight: 700;
+            color: var(--navy);
+            font-size: 13px;
+        }
+
+        .alerta-row {
+            background: #FEF2F2 !important;
+        }
+
+        .alerta-row td { border-bottom-color: #FCD0D0 !important; }
+
+        /* ── PROCEDIMIENTO ── */
+        .fases-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .fase-card {
+            border: 1px solid var(--gray-2);
+            border-top: 4px solid var(--blue);
+            padding: 18px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,82,163,0.07);
+        }
+
+        .fase-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .fase-num {
+            width: 28px;
+            height: 28px;
+            background: var(--gold);
+            color: var(--navy);
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .fase-titulo {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .fase-body {
+            font-size: 11.5px;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        .fase-body strong {
+            color: var(--navy);
+            font-weight: 700;
+        }
+
+        /* ── GALERÍA ── */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .gallery-item {
+            border: 1px solid var(--gray-2);
+            overflow: hidden;
+        }
+
+        .gallery-placeholder {
+            height: 180px;
+            background: var(--gray-1);
+            border-bottom: 1px solid var(--gray-2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .gallery-placeholder .ph-icon {
+            font-size: 30px;
+            opacity: 0.4;
+        }
+
+        .gallery-placeholder .ph-text {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gray-4);
+        }
+
+        .gallery-caption {
+            background: var(--navy);
+            color: rgba(255,255,255,0.85);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            padding: 8px 12px;
+        }
+
+        .gallery-note {
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: var(--gray-1);
+            border-left: 3px solid var(--gray-3);
+            font-size: 11px;
+            color: var(--gray-4);
+            font-style: italic;
+        }
+
+        /* ── CONCLUSIÓN ── */
+        .conclusion-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .concl-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--green-bg);
+            border: 1px solid #8ECFAA;
+            border-left: 4px solid var(--green);
+        }
+
+        .concl-check {
+            color: var(--green);
+            font-size: 15px;
+            font-weight: 800;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .concl-text strong {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .concl-text span {
+            font-size: 11px;
+            color: var(--text-soft);
+            line-height: 1.6;
+        }
+
+        .concl-closing {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: var(--navy);
+            color: rgba(255,255,255,0.8);
+            font-size: 11.5px;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .concl-closing strong { color: var(--gold); }
+
+        /* ── FIRMAS ── */
+        .firma-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-top: 10px;
+        }
+
+        .firma-card { text-align: center; }
+
+        .firma-space {
+            height: 60px;
+            border-bottom: 1.5px solid var(--navy);
+            margin-bottom: 10px;
+        }
+
+        .firma-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 2px;
+        }
+
+        .firma-cargo {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--gray-4);
+            margin-bottom: 6px;
+        }
+
+        .firma-data {
+            font-size: 10px;
+            color: var(--gray-4);
+            line-height: 1.7;
+        }
+
+        .firma-fields {
+            margin-top: 8px;
+            text-align: left;
+            display: inline-block;
+        }
+
+        .firma-fields div {
+            font-size: 10px;
+            color: var(--gray-4);
+            padding: 4px 0;
+            border-bottom: 1px solid var(--gray-2);
+            min-width: 220px;
+            margin-bottom: 4px;
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            background: var(--navy);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .footer-logo {
+            height: 36px;
+            width: auto;
+            opacity: 0.85;
+        }
+
+        .footer-info {
+            font-size: 10px;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.7;
+        }
+
+        .footer-info strong {
+            color: rgba(255,255,255,0.8);
+            font-weight: 600;
+        }
+
+        .footer-right {
+            text-align: right;
+        }
+
+        .footer-docref {
+            font-size: 10px;
+            color: var(--gold);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .footer-stamp {
+            font-size: 9px;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.5px;
+        }
+
+        /* ── PRINT ── */
+        @media print {
+            body { background: white; }
+            .doc { margin: 0; box-shadow: none; width: 100%; }
+        }
+
+        /* Fuerza colores de fondo en PDF — sin esto Chrome los omite */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    </style>
+</head>
+<body>
+<div class="doc">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-logo-wrap">
+            <img src="./H&Y_LOGO_2.png" alt="H&Y Mundo Servicios">
+        </div>
+        <div class="header-divider"></div>
+        <div class="header-body">
+            <div class="doc-label">Informe Técnico de Intervención</div>
+            <h1>Limpieza y Desinfección Correctiva</h1>
+            <div class="header-sub">Inocuar L&D Total · NIT 901.318.638 · Medellín, Colombia</div>
+        </div>
+        <div class="header-meta">
+            <div class="meta-badge">N° 052</div>
+            <div class="meta-tipo">Limpieza Correctiva</div>
+            <div class="meta-fecha">28 de Abril · 2026</div>
+        </div>
+    </div>
+
+    <div class="gold-stripe"></div>
+
+    <!-- RESUMEN EJECUTIVO -->
+    <div class="exec-summary">
+        <div class="exec-summary-title">Resumen Ejecutivo</div>
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-value">5 h</div>
+                <div class="kpi-label">Duración operación</div>
+            </div>
+            <div class="kpi-card gold">
+                <div class="kpi-value gold-c">3</div>
+                <div class="kpi-label">Insumos trazados</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">2</div>
+                <div class="kpi-label">Técnicos certificados</div>
+            </div>
+            <div class="kpi-card green">
+                <div class="kpi-value green">✓</div>
+                <div class="kpi-label">Inocuidad confirmada</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 1: INFORMACIÓN DE OPERACIÓN -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-num">1</div>
+            <div class="section-title">Información de la Operación</div>
+            <div class="section-badge">Datos generales</div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-cell">
+                <div class="info-label">Cliente Final</div>
+                <div class="info-value highlight">Cocorollo Palmas S.A.S</div>
+            </div>
+            <div class="info-cell">
+                <div class="info-label">Contacto en sitio</div>
+                <div class="info-value">Sergio Gómez / Carlos Muñoz</div>
+            </div>
+            <div class="info-cell">
+                <div class="info-label">Ubicación</div>
+                <div class="info-value">Km 10, retorno 10 vía Las Palmas<br>Tv. de la Montaña, Medellín</div>
+            </div>
+            <div class="info-cell">
+                <div class="info-label">Contratista</div>
+                <div class="info-value">H&Y Mundo Servicios S.A.S<br>Inocuar L&D Total</div>
+            </div>
+            <div class="info-cell">
+                <div class="info-label">Fecha de Ejecución</div>
+                <div class="info-value">28 de Abril de 2026</div>
+            </div>
+            <div class="info-cell">
+                <div class="info-label">Horario de Intervención</div>
+                <div class="info-value">23:00 — 04:00 &nbsp;(5 horas)</div>
+            </div>
+            <div class="info-cell">
+                <div class="info-label">Equipo Intervenido</div>
+                <div class="info-value">Parrilla 6 Toneladas</div>
+            </div>
+            <div class="info-cell">
+                <div class="info-label">Tipo de Servicio</div>
+                <div class="info-value"><span class="tipo-tag">Limpieza Correctiva</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 2: EQUIPO -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-num">2</div>
+            <div class="section-title">Equipo de Intervención</div>
+            <div class="section-badge">Personal técnico</div>
+        </div>
+
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-role">Director de Operaciones</div>
+                <div class="team-name">Geimer España Méndez</div>
+                <div class="team-detail">+57 300 151 6187</div>
+                <div class="team-detail">inocuarldtotal@gmail.com</div>
+                <span class="cert-tag">✓ Certificado HACCP</span>
+            </div>
+            <div class="team-card">
+                <div class="team-role">Auxiliar de Limpieza y Desinfección</div>
+                <div class="team-name">Juan Cano</div>
+                <div class="team-detail">Especialista en desinfección</div>
+                <div class="team-detail">Procedimientos HACCP</div>
+                <span class="cert-tag">✓ Entrenamiento actualizado</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3: TRAZABILIDAD -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-num">3</div>
+            <div class="section-title">Trazabilidad de Insumos</div>
+            <div class="section-badge">Control de calidad</div>
+        </div>
+
+        <table class="insumos-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Lote</th>
+                    <th>Vencimiento</th>
+                    <th>Concentración</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="prod-name">LK Econo Chlor</div>
+                        <div class="prod-type">Detergente Alcalino Clorado</div>
+                    </td>
+                    <td><span class="lote-tag">251636</span></td>
+                    <td>29/08/2026</td>
+                    <td><span class="conc-value">6%</span></td>
+                    <td>
+                        <div class="status-dot ok">
+                            <div class="dot green"></div> Vigente
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="prod-name">Alumi Clean</div>
+                        <div class="prod-type">Detergente Ácido Desincrustante</div>
+                    </td>
+                    <td><span class="lote-tag">249791</span></td>
+                    <td>31/07/2026</td>
+                    <td><span class="conc-value">3%</span></td>
+                    <td>
+                        <div class="status-dot ok">
+                            <div class="dot green"></div> Vigente
+                        </div>
+                    </td>
+                </tr>
+                <tr class="alerta-row">
+                    <td>
+                        <div class="prod-name">Titan 15%</div>
+                        <div class="prod-type">Ácido Peracético</div>
+                    </td>
+                    <td><span class="lote-tag">E25070165AF</span></td>
+                    <td>14/03/2026</td>
+                    <td><span class="conc-value">400 ppm</span></td>
+                    <td>
+                        <div class="status-dot warn">
+                            <div class="dot red"></div> Vencido ⚠
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SECCIÓN 4: PROCEDIMIENTO -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-num">4</div>
+            <div class="section-title">Descripción del Procedimiento Técnico</div>
+            <div class="section-badge">4 fases</div>
+        </div>
+
+        <div class="fases-grid">
+            <div class="fase-card">
+                <div class="fase-header">
+                    <div class="fase-num">I</div>
+                    <div class="fase-titulo">Alistamiento y Logística</div>
+                </div>
+                <div class="fase-body">
+                    Ingreso controlado a la zona de cocina. Acondicionamiento del área y preparación técnica de equipos: bomba manual, aspersores y sistemas de aplicación especializada.
+                </div>
+            </div>
+            <div class="fase-card">
+                <div class="fase-header">
+                    <div class="fase-num">II</div>
+                    <div class="fase-titulo">Desarme y Lavado Profundo</div>
+                </div>
+                <div class="fase-body">
+                    <strong>Remoción inicial:</strong> Preenjuague con agua potable.
+                    <strong>Limpieza alcalina:</strong> Aplicación de LK Econo Chlor con bomba manual.
+                    <strong>Acción mecánica:</strong> Cepillos de cerdas suaves.
+                    <strong>Enjuague final:</strong> Aclarado completo.
+                </div>
+            </div>
+            <div class="fase-card">
+                <div class="fase-header">
+                    <div class="fase-num">III</div>
+                    <div class="fase-titulo">Limpieza y Desinfección</div>
+                </div>
+                <div class="fase-body">
+                    <strong>Limpieza ácida:</strong> Aplicación de Alumi Clean con aspersor manual.
+                    <strong>Desinfección:</strong> Titan 15% a 400 ppm. Cobertura total en superficies de difícil acceso. Efecto residual sin enjuague posterior.
+                </div>
+            </div>
+            <div class="fase-card">
+                <div class="fase-header">
+                    <div class="fase-num">IV</div>
+                    <div class="fase-titulo">Armado y Verificación Final</div>
+                </div>
+                <div class="fase-body">
+                    Armado de equipos y verificación de funcionamiento. Desinfección final y secado con microfibra de alta calidad. Inspección final de conformidad y entrega al cliente.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 5: GALERÍA -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-num">5</div>
+            <div class="section-title">Registro Fotográfico</div>
+            <div class="section-badge">Antes · durante · después</div>
+        </div>
+
+        <div class="gallery">
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <div class="ph-icon">📷</div>
+                    <div class="ph-text">Estado inicial</div>
+                </div>
+                <div class="gallery-caption">Antes · Parrilla sin intervención</div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <div class="ph-icon">📷</div>
+                    <div class="ph-text">En proceso</div>
+                </div>
+                <div class="gallery-caption">Durante · Limpieza en ejecución</div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <div class="ph-icon">📷</div>
+                    <div class="ph-text">Estado final</div>
+                </div>
+                <div class="gallery-caption">Después · Resultado final</div>
+            </div>
+        </div>
+
+        <div class="gallery-note">
+            El registro fotográfico completo y archivo audiovisual se encuentra disponible en carpeta digital anexa para auditoría y cumplimiento normativo.
+        </div>
+    </div>
+
+    <!-- SECCIÓN 6: CONCLUSIÓN -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-num">6</div>
+            <div class="section-title">Conclusión y Certificación</div>
+        </div>
+
+        <div class="conclusion-grid">
+            <div class="concl-item">
+                <div class="concl-check">✓</div>
+                <div class="concl-text">
+                    <strong>Procedimiento completado</strong>
+                    <span>Limpieza correctiva ejecutada conforme a todos los protocolos de inocuidad y seguridad alimentaria establecidos por normativa HACCP.</span>
+                </div>
+            </div>
+            <div class="concl-item">
+                <div class="concl-check">✓</div>
+                <div class="concl-text">
+                    <strong>Cumplimiento normativo</strong>
+                    <span>Trazabilidad completa de insumos registrada: lotes, vencimientos y concentraciones documentados.</span>
+                </div>
+            </div>
+            <div class="concl-item">
+                <div class="concl-check">✓</div>
+                <div class="concl-text">
+                    <strong>Documentación completa</strong>
+                    <span>Registro fotográfico y audiovisual disponible. Documentación lista para auditoría regulatoria.</span>
+                </div>
+            </div>
+            <div class="concl-item">
+                <div class="concl-check">✓</div>
+                <div class="concl-text">
+                    <strong>Estado final verificado</strong>
+                    <span>Equipo funcional, desinfectado y listo para operación. Microbiología controlada. Inocuidad confirmada.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="concl-closing">
+            Agradecemos la confianza en <strong>H&Y Mundo Servicios S.A.S — Inocuar L&D Total</strong> para el mantenimiento de sus equipos críticos.<br>
+            Nuestro compromiso es garantizar la inocuidad alimentaria y la operación eficiente de sus instalaciones.
+        </div>
+    </div>
+
+    <!-- SECCIÓN 7: FIRMAS -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-num">7</div>
+            <div class="section-title">Autorización y Conformidad</div>
+        </div>
+
+        <div class="firma-grid">
+            <div class="firma-card">
+                <div class="firma-space"></div>
+                <div class="firma-name">Geimer España Méndez</div>
+                <div class="firma-cargo">Director de Operaciones</div>
+                <div class="firma-data">
+                    H&Y Mundo Servicios S.A.S<br>
+                    +57 300 151 6187 · inocuarldtotal@gmail.com
+                </div>
+            </div>
+            <div class="firma-card">
+                <div class="firma-space"></div>
+                <div class="firma-name">Jefe de Planta / Representante</div>
+                <div class="firma-cargo">Cocorollo Palmas S.A.S</div>
+                <div class="firma-fields">
+                    <div>Nombre: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                    <div>Cédula: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                    <div>Fecha: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="footer-left">
+            <img src="./H&Y_LOGO_2.png" alt="H&Y" class="footer-logo">
+            <div class="footer-info">
+                <strong>H&Y Mundo Servicios S.A.S — Inocuar L&D Total</strong><br>
+                NIT 901.318.638 · Medellín, Antioquia, Colombia<br>
+                inocuarldtotal@gmail.com · +57 300 151 6187
+            </div>
+        </div>
+        <div class="footer-right">
+            <div class="footer-docref">REF: HY-IT-052 · 2026</div>
+            <div class="footer-stamp">Documento auditable · Generado 28/04/2026</div>
+            <div class="footer-stamp" style="margin-top:2px;">Confidencial — Solo para uso del cliente</div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
