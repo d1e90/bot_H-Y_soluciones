@@ -24,7 +24,7 @@ function buildHTML(data) {
     equipo, fecha, horario, tecnicos,
     observaciones = 'Sin observaciones adicionales.',
     insumos = [],
-    fotoAntes, fotoDurante, fotoDespues,
+    fotos = [],
     tipoServicio = 'Limpieza Correctiva',
   } = data;
 
@@ -54,6 +54,14 @@ function buildHTML(data) {
       <div class="team-role">${i === 0 ? 'Director de Operaciones' : 'Auxiliar L&D'}</div>
       <div class="team-name">${t}</div>
       <span class="cert-tag">✓ Certificado HACCP</span>
+    </div>`).join('');
+
+  // Generar items de galería dinámicamente
+  const fotosArr = Array.isArray(fotos) ? fotos : [];
+  const galleryItems = fotosArr.map((foto, idx) => `
+    <div class="gallery-item">
+      ${photoTag(foto)}
+      <div class="gallery-caption">Foto ${idx + 1} de ${fotosArr.length}</div>
     </div>`).join('');
 
   return `<!DOCTYPE html>
@@ -193,7 +201,7 @@ function buildHTML(data) {
     .fase-body strong{color:var(--navy);font-weight:700;}
 
     /* GALERÍA */
-    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
     .gallery-item{border:1px solid var(--gray-2);overflow:hidden;}
     .gallery-placeholder{height:180px;background:var(--gray-1);
       border-bottom:1px solid var(--gray-2);display:flex;flex-direction:column;
@@ -411,21 +419,10 @@ function buildHTML(data) {
     <div class="section-header">
       <div class="section-num">${insumos.length > 0 ? 5 : 4}</div>
       <div class="section-title">Registro Fotográfico</div>
-      <div class="section-badge">Antes · durante · después</div>
+      <div class="section-badge">${fotosArr.length} foto${fotosArr.length !== 1 ? 's' : ''}</div>
     </div>
     <div class="gallery">
-      <div class="gallery-item">
-        ${photoTag(fotoAntes)}
-        <div class="gallery-caption">Antes · Estado inicial</div>
-      </div>
-      <div class="gallery-item">
-        ${photoTag(fotoDurante)}
-        <div class="gallery-caption">Durante · En proceso</div>
-      </div>
-      <div class="gallery-item">
-        ${photoTag(fotoDespues)}
-        <div class="gallery-caption">Después · Resultado final</div>
-      </div>
+      ${galleryItems}
     </div>
   </div>
 
