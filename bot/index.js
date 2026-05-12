@@ -1,6 +1,7 @@
 require('dotenv').config();
-const { Telegraf } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 const puppeteer = require('puppeteer');
+const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 const { buildHTML } = require('./template');
@@ -15,7 +16,10 @@ const userSessions = {};
 async function htmlToPdf(htmlContent, filename) {
   let browser;
   try {
-    browser = await puppeteer.launch({ headless: 'new' });
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle2' });
     
@@ -49,32 +53,133 @@ bot.start((ctx) => {
   ctx.reply(
     '🤝 *¡Bienvenido a H&Y Generador de Reportes!*\n\n' +
     'Soy un bot para generar reportes de limpieza y desinfección.\n\n' +
-    'Comandos disponibles:\n' +
-    '📋 /nuevo — Iniciar nuevo reporte\n' +
-    '❌ /cancelar — Cancelar reporte actual\n\n' +
-    '¿Comenzamos?',
-    { parse_mode: 'Markdown' }
+    '¿Qué deseas hacer?',
+    Markup.inlineKeyboard([
+      [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ])
   );
 });
 
-bot.command('nuevo', (ctx) => {
+// ============ ACCIONES CON BOTONES ============
+
+bot.action('nuevo_reporte', (ctx) => {
   const userId = ctx.from.id;
   userSessions[userId] = {
-    step: 'reportNum',
+    step: 'cliente',
     data: {}
   };
   
-  ctx.reply(
+  ctx.editMessageText(
     '📝 *Nuevo Reporte*\n\n' +
-    '¿Cuál es el número de reporte? (ej: 052)',
-    { parse_mode: 'Markdown' }
+    '¿Cuál es el nombre del cliente? (ej: Cocorollo Palmas S.A.S)',
+    Markup.inlineKeyboard([
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ])
   );
 });
 
-bot.command('cancelar', (ctx) => {
+bot.action('cancelar', (ctx) => {
   const userId = ctx.from.id;
   delete userSessions[userId];
-  ctx.reply('❌ Reporte cancelado.');
+  ctx.editMessageText('❌ Reporte cancelado.');
+});
+
+bot.action(/^tipo_servicio_(.+)$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  const tipo = ctx.match[1];
+  
+  session.data.tipoServicio = tipo === 'correctiva' ? 'Limpieza Correctiva' : 'Limpieza Preventiva';
+  session.step = 'reportNum';
+  
+  ctx.editMessageText(
+    `✅ Tipo: *${session.data.tipoServicio}*\n\n` +
+    '¿Cuál es el número de reporte? (ej: 052)',
+    Markup.inlineKeyboard([
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ])
+  );
+});
+
+bot.action('fotos_listo', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  
+  const fotosCount = (session.fotos.array && session.fotos.array.length) || 0;
+  
+  if (fotosCount < 6) {
+    ctx.answerCbQuery(`❌ Mínimo 6 fotos requeridas. Tienes ${fotosCount}.`, true);
+    return;
+  }
+  
+  // Guardar fotos en session.data
+  session.data.fotos = session.fotos.array;
+  session.step = 'insumos';
+  
+  ctx.editMessageText(
+    `✅ *${fotosCount} fotos guardadas.*\n\n` +
+    '💊 *Ahora los insumos*\n\n' +
+    'Envía los insumos en formato:\n' +
+    '`Nombre | Lote | Vencimiento | Concentración | Vencido(S/N)`\n\n' +
+    '_Ejemplo:_\n' +
+    '`LK Econo Chlor | 251636 | 29/08/2026 | 6% | N`\n' +
+    '`Alumi Clean | 249791 | 31/07/2026 | 3% | N`\n' +
+    '`Titan 15% | E25070165AF | 14/03/2026 | 400 ppm | S`\n\n' +
+    '_Cuando termines, haz clic en "Generar PDF"._',
+    Markup.inlineKeyboard([
+      [Markup.button.callback('📄 Generar PDF', 'generar_pdf')],
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ])
+  );
+});
+
+bot.action('generar_pdf', async (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  
+  if (!session || session.step !== 'insumos') {
+    ctx.answerCbQuery('Por favor completa los datos del reporte primero.', true);
+    return;
+  }
+  
+  if (!session.data.cliente || !session.data.reportNum) {
+    ctx.answerCbQuery('❌ Faltan datos obligatorios.', true);
+    return;
+  }
+  
+  try {
+    await ctx.answerCbQuery('⏳ Generando PDF...');
+    
+    const htmlContent = buildHTML(session.data);
+    const filename = `reporte-${session.data.reportNum}-${Date.now()}.pdf`;
+    const pdfPath = await htmlToPdf(htmlContent, filename);
+    
+    await ctx.replyWithDocument(
+      { source: pdfPath },
+      {
+        caption: `📄 Reporte #${session.data.reportNum} — ${session.data.cliente}`,
+        parse_mode: 'Markdown'
+      }
+    );
+
+    fs.unlink(pdfPath, () => {});
+
+    // Limpiar sesión
+    delete userSessions[userId];
+    
+    await ctx.reply(
+      '✅ *¡Reporte generado exitosamente!*\n\n' +
+      '¿Deseas crear otro?',
+      Markup.inlineKeyboard([
+        [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+        [Markup.button.callback('❌ Salir', 'cancelar')]
+      ])
+    );
+  } catch (error) {
+    console.error('Error generando reporte:', error);
+    ctx.answerCbQuery('❌ Error al generar el PDF. Intenta nuevamente.', true);
+  }
 });
 
 // ============ MANEJADOR DE TEXTO ============
@@ -84,21 +189,29 @@ bot.on('text', async (ctx) => {
   const session = userSessions[userId];
   
   if (!session) {
-    ctx.reply('Por favor usa /nuevo para iniciar un reporte.');
+    ctx.reply('Por favor usa /start para iniciar.');
     return;
   }
   
   const text = ctx.message.text.trim();
   
   switch (session.step) {
-    case 'reportNum':
-      session.data.reportNum = text;
-      session.step = 'cliente';
-      ctx.reply('¿Nombre del cliente? (ej: Cocorollo Palmas S.A.S)');
-      break;
-      
     case 'cliente':
       session.data.cliente = text;
+      session.step = 'tipoServicio';
+      ctx.reply(
+        `✅ Cliente: *${text}*\n\n` +
+        '¿Tipo de servicio?',
+        Markup.inlineKeyboard([
+          [Markup.button.callback('🔧 Correctiva', 'tipo_servicio_correctiva')],
+          [Markup.button.callback('📅 Preventiva', 'tipo_servicio_preventiva')],
+          [Markup.button.callback('❌ Cancelar', 'cancelar')]
+        ])
+      );
+      break;
+      
+    case 'reportNum':
+      session.data.reportNum = text;
       session.step = 'contacto';
       ctx.reply('¿Contacto en sitio? (ej: Sergio Gómez / Carlos Muñoz)');
       break;
@@ -144,14 +257,49 @@ bot.on('text', async (ctx) => {
       session.step = 'fotos';
       ctx.reply(
         '📸 *Envía las fotos del reporte*\n\n' +
-        'Envía 3 fotos en este orden:\n' +
-        '1️⃣ Foto ANTES (estado inicial)\n' +
-        '2️⃣ Foto DURANTE (en proceso)\n' +
-        '3️⃣ Foto DESPUÉS (resultado final)\n\n' +
-        '_Escribe "skip" para continuar sin fotos._',
-        { parse_mode: 'Markdown' }
+        'Envía entre *6 y 10 fotos* del trabajo realizado.\n' +
+        'Puedes incluir:\n' +
+        '• Fotos ANTES\n' +
+        '• Fotos DURANTE\n' +
+        '• Fotos DESPUÉS\n' +
+        '• Detalles de equipos\n' +
+        '• Zonas de trabajo\n\n' +
+        '_Mínimo 6, máximo 10 fotos._\n' +
+        '_Cuando termines, haz clic en "Fotos Listo"._',
+        Markup.inlineKeyboard([
+          [Markup.button.callback('✅ Fotos Listo', 'fotos_listo')],
+          [Markup.button.callback('❌ Cancelar', 'cancelar')]
+        ])
       );
-      session.fotos = { count: 0 };
+      session.fotos = { array: [], count: 0 };
+      break;
+      
+    case 'insumos':
+      // Parsear insumo
+      const parts = text.split('|').map(p => p.trim());
+      if (parts.length === 5) {
+        const insumo = {
+          nombre: parts[0],
+          lote: parts[1],
+          vencimiento: parts[2],
+          concentracion: parts[3],
+          vencido: parts[4].toLowerCase() === 's'
+        };
+        if (!session.insumos) session.insumos = [];
+        session.insumos.push(insumo);
+        session.data.insumos = session.insumos;
+        ctx.reply(
+          `✅ Insumo agregado: *${parts[0]}*\n\n` +
+          `Total insumos: ${session.insumos.length}\n\n` +
+          '_Agrega otro insumo o haz clic en "Generar PDF"._',
+          Markup.inlineKeyboard([
+            [Markup.button.callback('📄 Generar PDF', 'generar_pdf')],
+            [Markup.button.callback('❌ Cancelar', 'cancelar')]
+          ])
+        );
+      } else {
+        ctx.reply('❌ Formato incorrecto. Usa: `Nombre | Lote | Vencimiento | Concentración | S/N`', { parse_mode: 'Markdown' });
+      }
       break;
   }
 });
@@ -167,120 +315,54 @@ bot.on('photo', async (ctx) => {
   }
   
   try {
-    const photoCount = session.fotos.count || 0;
+    const fotosCount = (session.fotos.array && session.fotos.array.length) || 0;
+    
+    // Validar límite máximo (10 fotos)
+    if (fotosCount >= 10) {
+      ctx.reply('⚠️ Ya has alcanzado el máximo de 10 fotos. Haz clic en "Fotos Listo" para continuar.', 
+        Markup.inlineKeyboard([
+          [Markup.button.callback('✅ Fotos Listo', 'fotos_listo')],
+          [Markup.button.callback('❌ Cancelar', 'cancelar')]
+        ])
+      );
+      return;
+    }
+    
     const file = await ctx.telegram.getFile(ctx.message.photo[ctx.message.photo.length - 1].file_id);
     const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
     
     // Convertir a base64
-    const axios = require('axios');
     const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
     const b64 = Buffer.from(response.data).toString('base64');
     const mimeType = 'image/jpeg';
     const fotoB64 = `data:${mimeType};base64,${b64}`;
     
-    if (photoCount === 0) {
-      session.data.fotoAntes = fotoB64;
-      ctx.reply('✅ Foto ANTES guardada. Envía la foto DURANTE.');
-    } else if (photoCount === 1) {
-      session.data.fotoDurante = fotoB64;
-      ctx.reply('✅ Foto DURANTE guardada. Envía la foto DESPUÉS.');
-    } else if (photoCount === 2) {
-      session.data.fotoDespues = fotoB64;
-      session.step = 'insumos';
-      ctx.reply(
-        '✅ Fotos completas.\n\n' +
-        '💊 *Ahora los insumos*\n\n' +
-        'Envía los insumos en formato:\n' +
-        '`Nombre | Lote | Vencimiento | Concentración | Vencido(S/N)`\n\n' +
-        '_Ejemplo:_\n' +
-        '`LK Econo Chlor | 251636 | 29/08/2026 | 6% | N`\n' +
-        '`Alumi Clean | 249791 | 31/07/2026 | 3% | N`\n' +
-        '`Titan 15% | E25070165AF | 14/03/2026 | 400 ppm | S`\n\n' +
-        '_Cuando termines, escribe "listo" para generar el reporte._',
-        { parse_mode: 'Markdown' }
-      );
-      session.insumos = [];
+    // Guardar en array
+    if (!session.fotos.array) {
+      session.fotos.array = [];
     }
-    session.fotos.count = (photoCount || 0) + 1;
+    session.fotos.array.push(fotoB64);
+    
+    const nuevaCount = session.fotos.array.length;
+    const mensaje = 
+      `✅ Foto ${nuevaCount}/10 guardada.\n\n` +
+      (nuevaCount >= 6 
+        ? '_Tienes mínimo de fotos. Puedes hacer clic en "Fotos Listo" cuando termines, o agregar más (hasta 10)._'
+        : `_Falta${10 - nuevaCount === 1 ? '' : 'n'} ${10 - nuevaCount} foto${10 - nuevaCount === 1 ? '' : 's'} para llegar al máximo._`);
+    
+    if (nuevaCount >= 6) {
+      ctx.reply(mensaje, 
+        Markup.inlineKeyboard([
+          [Markup.button.callback('✅ Fotos Listo', 'fotos_listo')],
+          [Markup.button.callback('❌ Cancelar', 'cancelar')]
+        ])
+      );
+    } else {
+      ctx.reply(mensaje);
+    }
   } catch (error) {
     console.error('Error procesando foto:', error);
     ctx.reply('❌ Error al procesar la foto. Intenta nuevamente.');
-  }
-});
-
-// ============ MANEJADOR DE INSUMOS ============
-
-bot.hears(/^listo$/i, async (ctx) => {
-  const userId = ctx.from.id;
-  const session = userSessions[userId];
-  
-  if (!session || session.step !== 'insumos') {
-    ctx.reply('Por favor completa los datos del reporte primero.');
-    return;
-  }
-  
-  if (!session.data.cliente || !session.data.reportNum) {
-    ctx.reply('❌ Faltan datos obligatorios. Usa /nuevo para reiniciar.');
-    return;
-  }
-  
-  try {
-    ctx.reply('⏳ Generando PDF, por favor espera...');
-    
-    const htmlContent = buildHTML(session.data);
-    const filename = `reporte-${session.data.reportNum}-${Date.now()}.pdf`;
-    const pdfPath = await htmlToPdf(htmlContent, filename);
-    
-    await ctx.replyWithDocument(
-      { source: pdfPath },
-      {
-        caption: `📄 Reporte #${session.data.reportNum} — ${session.data.cliente}`,
-        parse_mode: 'Markdown'
-      }
-    );
-    
-    // Limpiar sesión
-    delete userSessions[userId];
-    
-    ctx.reply(
-      '✅ *¡Reporte generado exitosamente!*\n\n' +
-      'Usa /nuevo para crear otro reporte.',
-      { parse_mode: 'Markdown' }
-    );
-  } catch (error) {
-    console.error('Error generando reporte:', error);
-    ctx.reply('❌ Error al generar el PDF. Intenta nuevamente.');
-  }
-});
-
-// Manejador de insumos mientras estén en ese paso
-bot.on('text', async (ctx) => {
-  const userId = ctx.from.id;
-  const session = userSessions[userId];
-  
-  if (!session || session.step !== 'insumos') return;
-  
-  const text = ctx.message.text.trim();
-  
-  if (text.toLowerCase() === 'listo') {
-    return; // Manejado por hears()
-  }
-  
-  // Parsear insumo
-  const parts = text.split('|').map(p => p.trim());
-  if (parts.length === 5) {
-    const insumo = {
-      nombre: parts[0],
-      lote: parts[1],
-      vencimiento: parts[2],
-      concentracion: parts[3],
-      vencido: parts[4].toLowerCase() === 's'
-    };
-    session.insumos.push(insumo);
-    session.data.insumos = session.insumos;
-    ctx.reply(`✅ Insumo agregado: *${parts[0]}*\n\nEscribe otro insumo o escribe *listo* para generar el reporte.`, { parse_mode: 'Markdown' });
-  } else {
-    ctx.reply('❌ Formato incorrecto. Usa: `Nombre | Lote | Vencimiento | Concentración | S/N`', { parse_mode: 'Markdown' });
   }
 });
 
@@ -288,7 +370,7 @@ bot.on('text', async (ctx) => {
 
 bot.catch((err, ctx) => {
   console.error('Error en bot:', err);
-  ctx.reply('❌ Ocurrió un error. Por favor intenta de nuevo o usa /nuevo.');
+  ctx.reply('❌ Ocurrió un error. Por favor intenta de nuevo o usa /start.');
 });
 
 // ============ INICIAR BOT ============
