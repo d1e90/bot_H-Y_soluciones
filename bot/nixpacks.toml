@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["chromium"]
+
+[phases.install]
+cmds = ["PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci"]
+
+[start]
+cmd = "PUPPETEER_EXECUTABLE_PATH=$(which chromium) node index.js"
