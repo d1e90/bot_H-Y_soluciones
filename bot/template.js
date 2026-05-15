@@ -1,7 +1,7 @@
 const path = require('path');
 const fs   = require('fs');
 
-const LOGO_PATH = path.resolve(__dirname, '../H&Y_LOGO_2.png');
+const LOGO_PATH = path.resolve(__dirname, 'H&Y_LOGO_2.png');
 
 function logoBase64() {
   const data = fs.readFileSync(LOGO_PATH);
