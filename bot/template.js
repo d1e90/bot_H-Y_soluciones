@@ -117,6 +117,7 @@ function buildHTML(data) {
     .kpi-card.gold{border-top-color:var(--gold);}
     .kpi-card.green{border-top-color:#2ECC82;}
     .kpi-value{font-size:26px;font-weight:800;color:#fff;line-height:1;margin-bottom:4px;}
+    .kpi-value.sm{font-size:16px;line-height:1.2;}
     .kpi-value.green{color:#2ECC82;}
     .kpi-value.gold-c{color:var(--gold-light);}
     .kpi-label{font-size:10px;font-weight:500;color:rgba(255,255,255,.55);
@@ -201,7 +202,7 @@ function buildHTML(data) {
     .fase-body strong{color:var(--navy);font-weight:700;}
 
     /* GALERÍA */
-    .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
     .gallery-item{border:1px solid var(--gray-2);overflow:hidden;}
     .gallery-placeholder{height:180px;background:var(--gray-1);
       border-bottom:1px solid var(--gray-2);display:flex;flex-direction:column;
@@ -234,9 +235,10 @@ function buildHTML(data) {
     .firma-cargo{font-size:10px;font-weight:600;letter-spacing:1px;
       text-transform:uppercase;color:var(--gray-4);margin-bottom:6px;}
     .firma-data{font-size:10px;color:var(--gray-4);line-height:1.7;}
-    .firma-fields{margin-top:8px;text-align:left;display:inline-block;}
-    .firma-fields div{font-size:10px;color:var(--gray-4);padding:4px 0;
-      border-bottom:1px solid var(--gray-2);min-width:220px;margin-bottom:4px;}
+    .firma-fields{margin-top:8px;text-align:left;display:inline-block;width:100%;}
+    .firma-fields div{font-size:10px;color:var(--gray-4);padding:5px 0;
+      border-bottom:1.5px solid var(--gray-2);min-width:240px;margin-bottom:6px;
+      padding-right:150px;}
 
     /* FOOTER */
     .footer{background:var(--navy);padding:18px 30px;display:flex;
@@ -285,7 +287,7 @@ function buildHTML(data) {
     <div class="exec-summary-title">Resumen Ejecutivo</div>
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-value">${horario}</div>
+        <div class="kpi-value sm">${horario}</div>
         <div class="kpi-label">Horario operación</div>
       </div>
       <div class="kpi-card gold">
@@ -484,9 +486,9 @@ function buildHTML(data) {
         <div class="firma-name">Jefe de Planta / Representante</div>
         <div class="firma-cargo">${cliente}</div>
         <div class="firma-fields">
-          <div>Nombre:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-          <div>Cédula:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-          <div>Fecha:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          <div>Nombre:</div>
+          <div>Cédula:</div>
+          <div>Fecha:</div>
         </div>
       </div>
     </div>
