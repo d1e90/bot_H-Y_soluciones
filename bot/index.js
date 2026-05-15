@@ -10,6 +10,17 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 const userSessions = {};
 
+// Lista de IDs autorizados. Vacía = acceso libre (cualquiera puede usar el bot).
+// Para restringir: agrega IDs separados por coma en la variable ALLOWED_IDS del .env
+// Ej: ALLOWED_IDS=123456789,987654321
+const ALLOWED_IDS = process.env.ALLOWED_IDS
+  ? process.env.ALLOWED_IDS.split(',').map(s => parseInt(s.trim(), 10)).filter(Boolean)
+  : [];
+
+function isAllowed(userId) {
+  return ALLOWED_IDS.length === 0 || ALLOWED_IDS.includes(userId);
+}
+
 // ============ UTILIDADES ============
 
 async function htmlToPdf(htmlContent, filename) {
@@ -49,8 +60,19 @@ bot.start((ctx) => {
   const userId = ctx.from.id;
   userSessions[userId] = {};
 
+  if (!isAllowed(userId)) {
+    return ctx.reply(
+      '🔐 *Bot H&Y — Acceso restringido*\n\n' +
+      `Tu ID de Telegram es:\n\`${userId}\`\n\n` +
+      'Comparte este número con H&Y Mundo Servicios para solicitar acceso.\n' +
+      '📞 +57 300 151 6187',
+      { parse_mode: 'Markdown' }
+    );
+  }
+
   ctx.reply(
     '🤝 *¡Bienvenido a H&Y Generador de Reportes!*\n\n' +
+    `Tu ID de Telegram: \`${userId}\`\n\n` +
     'Soy un bot para generar reportes de limpieza y desinfección.\n\n' +
     '¿Qué deseas hacer?',
     { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
@@ -70,6 +92,7 @@ bot.command('cancelar', (ctx) => {
 
 bot.action('nuevo_reporte', (ctx) => {
   const userId = ctx.from.id;
+  if (!isAllowed(userId)) return ctx.answerCbQuery('Sin acceso autorizado.', true);
   userSessions[userId] = {
     step: 'cliente',
     data: {}

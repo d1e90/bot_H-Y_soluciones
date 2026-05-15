@@ -56,7 +56,6 @@ function buildHTML(data) {
       <span class="cert-tag">✓ Certificado HACCP</span>
     </div>`).join('');
 
-  // Generar items de galería dinámicamente
   const fotosArr = Array.isArray(fotos) ? fotos : [];
   const galleryItems = fotosArr.map((foto, idx) => `
     <div class="gallery-item">
@@ -72,111 +71,126 @@ function buildHTML(data) {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy:#0D1B2A; --blue:#0052A3; --blue-light:#D6E8F8;
+      --navy:#0D1B2A; --blue:#0052A3; --blue-light:#E8F1FC;
       --gold:#C9A84C; --gold-light:#F0D98C; --gold-bg:#FBF5E6;
-      --red:#C1272D; --gray-1:#EEF1F6; --gray-2:#D8DCE6;
+      --red:#C1272D; --gray-1:#F8F9FC; --gray-2:#E4E9F2;
       --gray-3:#B0B8C8; --gray-4:#6B7789;
-      --text:#0D1B2A; --text-soft:#3A4A5C;
+      --text:#1A2332; --text-soft:#4A5568;
       --green:#145C38; --green-bg:#E0F0E8;
     }
     *{margin:0;padding:0;box-sizing:border-box;
       -webkit-print-color-adjust:exact!important;
       print-color-adjust:exact!important;}
-    body{font-family:'Inter','Segoe UI',sans-serif;background:#CBD0DA;
+    body{font-family:'Inter','Segoe UI',sans-serif;background:#DDE3EE;
          color:var(--text);font-size:13px;line-height:1.5;}
-    .doc{width:794px;margin:0 auto;background:#F4F6FA;}
+    .doc{width:794px;margin:0 auto;background:#fff;
+         box-shadow:0 0 60px rgba(0,0,0,0.18);}
 
-    /* HEADER */
-    .header{background:var(--navy);display:flex;align-items:stretch;min-height:110px;}
-    .header-logo-wrap{background:#fff;padding:16px 20px;display:flex;
-      align-items:center;justify-content:center;min-width:160px;}
-    .header-logo-wrap img{height:70px;width:auto;}
-    .header-divider{width:3px;background:var(--gold);}
-    .header-body{flex:1;padding:20px 26px;display:flex;flex-direction:column;justify-content:center;}
-    .doc-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
-      color:var(--gold);margin-bottom:6px;}
-    .header-body h1{font-size:19px;font-weight:700;color:#fff;margin-bottom:4px;}
-    .header-sub{font-size:11px;color:rgba(255,255,255,.55);}
-    .header-meta{padding:20px 26px;display:flex;flex-direction:column;
-      justify-content:center;align-items:flex-end;gap:6px;
-      border-left:1px solid rgba(255,255,255,.08);}
-    .meta-badge{background:var(--gold);color:var(--navy);font-size:20px;
-      font-weight:800;padding:6px 16px;}
-    .meta-tipo{font-size:10px;font-weight:600;letter-spacing:1.5px;
-      text-transform:uppercase;color:rgba(255,255,255,.5);}
-    .meta-fecha{font-size:11px;color:rgba(255,255,255,.7);font-weight:500;}
-    .gold-stripe{height:4px;background:linear-gradient(90deg,var(--gold),var(--gold-light),var(--gold));}
+    /* === HEADER === */
+    .header{background:var(--navy);position:relative;overflow:hidden;}
+    .deco-c1{position:absolute;top:-50px;right:-50px;width:180px;height:180px;
+      border-radius:50%;background:rgba(201,168,76,0.10);}
+    .deco-c2{position:absolute;top:10px;right:90px;width:90px;height:90px;
+      border-radius:50%;background:rgba(0,82,163,0.22);}
+    .deco-c3{position:absolute;bottom:36px;right:16px;width:40px;height:40px;
+      border-radius:50%;background:rgba(255,255,255,0.04);}
+    .header-inner{padding:28px 32px 26px;display:flex;align-items:center;
+      gap:22px;position:relative;z-index:1;}
+    .header-logo-wrap{background:#fff;border-radius:10px;padding:12px 16px;
+      box-shadow:0 6px 24px rgba(0,0,0,0.35);flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;}
+    .header-logo-wrap img{height:62px;width:auto;}
+    .header-body{flex:1;}
+    .doc-label{font-size:10px;font-weight:600;letter-spacing:2px;
+      text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+    .header-body h1{font-size:17px;font-weight:700;color:#fff;
+      margin-bottom:4px;line-height:1.3;}
+    .header-sub{font-size:11px;color:rgba(255,255,255,.48);}
+    .report-badge{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);
+      border-radius:10px;padding:14px 18px;text-align:right;flex-shrink:0;min-width:148px;}
+    .badge-label{font-size:9px;font-weight:600;letter-spacing:2px;
+      text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
+    .badge-num{font-size:26px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:6px;}
+    .badge-tipo{font-size:10px;color:rgba(255,255,255,.68);margin-bottom:2px;}
+    .badge-fecha{font-size:10px;color:rgba(255,255,255,.40);}
+    /* wave: SVG fills with --gray-1 (#F8F9FC) to create curved edge */
+    .header-wave{display:block;width:100%;height:34px;}
 
-    /* KPI */
-    .exec-summary{background:var(--navy);border-bottom:4px solid var(--gold);padding:20px 30px;}
-    .exec-summary-title{font-size:9px;font-weight:700;letter-spacing:2.5px;
-      text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
-    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-    .kpi-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-      border-top:3px solid var(--blue);padding:14px 16px;}
+    /* === KPI STRIP === */
+    .kpi-strip{background:var(--gray-1);padding:20px 32px;
+      border-bottom:1px solid var(--gray-2);}
+    .kpi-strip-label{font-size:9px;font-weight:700;letter-spacing:2.5px;
+      text-transform:uppercase;color:var(--gray-4);margin-bottom:12px;}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .kpi-card{background:#fff;border-radius:8px;padding:16px;
+      border:1px solid var(--gray-2);border-top:3px solid var(--blue);
+      box-shadow:0 2px 10px rgba(0,0,0,0.055);}
     .kpi-card.gold{border-top-color:var(--gold);}
     .kpi-card.green{border-top-color:#2ECC82;}
-    .kpi-value{font-size:26px;font-weight:800;color:#fff;line-height:1;margin-bottom:4px;}
-    .kpi-value.sm{font-size:16px;line-height:1.2;}
+    .kpi-value{font-size:24px;font-weight:800;color:var(--navy);
+      line-height:1;margin-bottom:4px;}
+    .kpi-value.sm{font-size:15px;line-height:1.3;font-weight:700;}
     .kpi-value.green{color:#2ECC82;}
-    .kpi-value.gold-c{color:var(--gold-light);}
-    .kpi-label{font-size:10px;font-weight:500;color:rgba(255,255,255,.55);
+    .kpi-value.gold-c{color:var(--gold);}
+    .kpi-label{font-size:10px;font-weight:500;color:var(--gray-4);
       text-transform:uppercase;letter-spacing:.5px;}
 
-    /* SECCIÓN */
-    .section{padding:26px 30px;border-bottom:2px solid var(--gray-2);background:#fff;}
-    .section:nth-child(odd){background:#F4F7FB;}
-    .section:last-child{border-bottom:none;}
-    .section-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;
-      padding-bottom:10px;border-bottom:2px solid var(--blue-light);}
-    .section-num{width:26px;height:26px;background:var(--blue);color:#fff;
-      font-size:11px;font-weight:800;display:flex;align-items:center;
-      justify-content:center;flex-shrink:0;}
-    .section-title{font-size:12px;font-weight:800;color:var(--navy);
-      text-transform:uppercase;letter-spacing:1px;flex:1;}
+    /* === SECTION === */
+    .section{padding:24px 32px;border-bottom:1px solid var(--gray-2);background:#fff;}
+    .section-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+    .section-num{width:28px;height:28px;background:var(--navy);color:#fff;
+      font-size:11px;font-weight:800;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .section-title{font-size:13px;font-weight:700;color:var(--navy);
+      text-transform:uppercase;letter-spacing:.8px;flex:1;}
     .section-badge{font-size:9px;font-weight:700;letter-spacing:1px;
-      text-transform:uppercase;padding:3px 10px;
-      background:var(--blue-light);border:1px solid #B8D6F2;color:var(--blue);}
+      text-transform:uppercase;padding:4px 12px;background:var(--blue-light);
+      border-radius:100px;color:var(--blue);}
+    .section-divider{height:2px;background:linear-gradient(90deg,var(--gold),transparent);
+      margin-bottom:16px;border-radius:2px;}
 
-    /* INFO GRID */
-    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);
-      gap:2px;background:var(--gray-2);border:2px solid var(--gray-2);}
-    .info-cell{background:#fff;padding:13px 16px;}
-    .info-cell:nth-child(odd){background:var(--blue-light);}
+    /* === INFO GRID === */
+    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .info-cell{background:var(--gray-1);border-radius:6px;padding:12px 16px;
+      border:1px solid var(--gray-2);}
     .info-label{font-size:9px;font-weight:700;letter-spacing:1.4px;
       text-transform:uppercase;color:var(--blue);margin-bottom:4px;}
     .info-value{font-size:13px;font-weight:600;color:var(--navy);}
-    .info-value.highlight{color:var(--blue);font-weight:700;}
+    .info-value.highlight{color:var(--blue);}
     .tipo-tag{display:inline-block;background:var(--navy);color:var(--gold-light);
       font-size:9px;font-weight:700;letter-spacing:1.5px;
-      text-transform:uppercase;padding:5px 12px;}
+      text-transform:uppercase;padding:4px 10px;border-radius:4px;}
 
-    /* EQUIPO */
+    /* === EQUIPO === */
     .team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
     .team-card{border:1px solid var(--gray-2);border-left:4px solid var(--gold);
-      padding:16px 18px;background:var(--gray-1);
-      box-shadow:0 2px 6px rgba(0,0,0,.06);}
+      padding:16px 18px;background:#fff;border-radius:0 8px 8px 0;
+      box-shadow:0 2px 10px rgba(0,0,0,0.055);}
     .team-role{font-size:9px;font-weight:700;letter-spacing:1.5px;
       text-transform:uppercase;color:var(--blue);margin-bottom:6px;}
     .team-name{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:8px;}
-    .cert-tag{display:inline-block;margin-top:8px;background:var(--green-bg);
+    .cert-tag{display:inline-block;background:var(--green-bg);
       color:var(--green);font-size:9px;font-weight:700;letter-spacing:1px;
-      text-transform:uppercase;padding:3px 8px;border:1px solid #8ECFAA;}
+      text-transform:uppercase;padding:3px 8px;border-radius:100px;
+      border:1px solid #8ECFAA;}
 
-    /* TABLA */
+    /* === TABLA === */
+    .table-wrap{border-radius:8px;overflow:hidden;
+      border:1px solid var(--gray-2);box-shadow:0 2px 10px rgba(0,0,0,0.055);}
     .insumos-table{width:100%;border-collapse:collapse;}
     .insumos-table thead tr{background:var(--navy);}
     .insumos-table th{padding:10px 13px;text-align:left;font-size:9px;
       font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
-      color:rgba(255,255,255,.7);}
+      color:rgba(255,255,255,.75);}
     .insumos-table td{padding:11px 13px;border-bottom:1px solid var(--gray-2);
       font-size:12px;vertical-align:middle;}
+    .insumos-table tbody tr:last-child td{border-bottom:none;}
     .insumos-table tbody tr:nth-child(even) td{background:var(--gray-1);}
     .prod-name{font-weight:700;color:var(--navy);}
     .prod-type{font-size:10px;color:var(--gray-4);margin-top:1px;}
     .lote-tag{font-family:'Courier New',monospace;font-size:11px;font-weight:700;
-      color:var(--blue);background:#EBF3FC;padding:3px 7px;
-      border:1px solid #C2D9F0;}
+      color:var(--blue);background:var(--blue-light);padding:3px 7px;
+      border-radius:4px;border:1px solid #C2D9F0;}
     .conc-value{font-weight:700;color:var(--navy);}
     .status-dot{display:inline-flex;align-items:center;gap:5px;
       font-size:11px;font-weight:600;}
@@ -188,46 +202,48 @@ function buildHTML(data) {
     .alerta-row{background:#FEF2F2!important;}
     .alerta-row td{border-bottom-color:#FCD0D0!important;}
 
-    /* FASES */
+    /* === FASES === */
     .fases-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
-    .fase-card{border:1px solid var(--gray-2);border-top:4px solid var(--blue);
-      padding:16px;background:#fff;box-shadow:0 2px 8px rgba(0,82,163,.07);}
+    .fase-card{border:1px solid var(--gray-2);border-radius:8px;
+      padding:16px;background:#fff;box-shadow:0 2px 10px rgba(0,82,163,.05);}
     .fase-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-    .fase-num{width:28px;height:28px;background:var(--gold);color:var(--navy);
-      font-size:13px;font-weight:800;display:flex;align-items:center;
-      justify-content:center;flex-shrink:0;}
+    .fase-num{width:30px;height:30px;background:var(--gold);color:var(--navy);
+      font-size:13px;font-weight:800;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .fase-titulo{font-size:11px;font-weight:700;color:var(--navy);
       text-transform:uppercase;letter-spacing:.5px;}
     .fase-body{font-size:11px;color:var(--text-soft);line-height:1.65;}
     .fase-body strong{color:var(--navy);font-weight:700;}
 
-    /* GALERÍA */
+    /* === GALERÍA === */
     .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-    .gallery-item{border:1px solid var(--gray-2);overflow:hidden;}
+    .gallery-item{border-radius:8px;overflow:hidden;border:1px solid var(--gray-2);
+      box-shadow:0 2px 10px rgba(0,0,0,0.07);}
     .gallery-placeholder{height:180px;background:var(--gray-1);
-      border-bottom:1px solid var(--gray-2);display:flex;flex-direction:column;
+      display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:8px;}
     .ph-icon{font-size:28px;opacity:.4;}
     .ph-text{font-size:10px;font-weight:700;letter-spacing:1.5px;
       text-transform:uppercase;color:var(--gray-4);}
-    .gallery-caption{background:var(--navy);color:rgba(255,255,255,.85);
-      font-size:10px;font-weight:600;letter-spacing:.8px;
-      text-transform:uppercase;padding:7px 12px;}
+    .gallery-caption{background:var(--blue-light);color:var(--blue);
+      font-size:10px;font-weight:600;letter-spacing:.5px;
+      padding:7px 12px;text-align:center;}
 
-    /* CONCLUSIÓN */
+    /* === CONCLUSIÓN === */
     .conclusion-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
     .concl-item{display:flex;gap:12px;padding:13px 15px;
-      background:var(--green-bg);border:1px solid #8ECFAA;
-      border-left:4px solid var(--green);}
-    .concl-check{color:var(--green);font-size:14px;font-weight:800;flex-shrink:0;}
+      background:var(--green-bg);border-radius:6px;border:1px solid #8ECFAA;}
+    .concl-check{color:var(--green);font-size:16px;font-weight:800;
+      flex-shrink:0;margin-top:1px;}
     .concl-text strong{display:block;font-size:10px;font-weight:800;
       color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
     .concl-text span{font-size:11px;color:var(--text-soft);line-height:1.5;}
-    .concl-closing{margin-top:14px;padding:14px 16px;background:var(--navy);
-      color:rgba(255,255,255,.8);font-size:11.5px;line-height:1.7;text-align:center;}
-    .concl-closing strong{color:var(--gold);}
+    .concl-closing{margin-top:14px;padding:16px 20px;
+      background:var(--blue-light);border-left:4px solid var(--blue);
+      border-radius:0 8px 8px 0;color:var(--navy);font-size:11.5px;line-height:1.7;}
+    .concl-closing strong{color:var(--blue);}
 
-    /* FIRMAS */
+    /* === FIRMAS === */
     .firma-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:40px;margin-top:10px;}
     .firma-card{text-align:center;}
     .firma-space{height:60px;border-bottom:1.5px solid var(--navy);margin-bottom:10px;}
@@ -240,8 +256,17 @@ function buildHTML(data) {
       border-bottom:1.5px solid var(--gray-2);min-width:240px;margin-bottom:6px;
       padding-right:150px;}
 
-    /* FOOTER */
-    .footer{background:var(--navy);padding:18px 30px;display:flex;
+    /* === OBS === */
+    .obs-box{background:var(--gold-bg);border:1px solid #E8D48A;
+      border-left:4px solid var(--gold);padding:14px 16px;
+      border-radius:0 6px 6px 0;
+      font-size:12px;color:var(--text-soft);line-height:1.7;margin-top:14px;}
+    .obs-box strong{color:var(--navy);display:block;
+      font-size:9px;font-weight:700;letter-spacing:1.4px;
+      text-transform:uppercase;margin-bottom:6px;}
+
+    /* === FOOTER === */
+    .footer{background:var(--navy);padding:18px 32px;display:flex;
       justify-content:space-between;align-items:center;}
     .footer-left{display:flex;align-items:center;gap:12px;}
     .footer-logo{height:34px;width:auto;opacity:.85;}
@@ -251,40 +276,41 @@ function buildHTML(data) {
     .footer-docref{font-size:10px;color:var(--gold);font-weight:600;
       letter-spacing:.5px;margin-bottom:3px;}
     .footer-stamp{font-size:9px;color:rgba(255,255,255,.35);}
-
-    /* OBSERVACIONES */
-    .obs-box{background:var(--gold-bg);border:1px solid #E8D48A;
-      border-left:4px solid var(--gold);padding:14px 16px;
-      font-size:12px;color:var(--text-soft);line-height:1.7;margin-top:0;}
-    .obs-box strong{color:var(--navy);display:block;
-      font-size:9px;font-weight:700;letter-spacing:1.4px;
-      text-transform:uppercase;margin-bottom:6px;}
   </style>
 </head>
 <body>
 <div class="doc">
 
+  <!-- HEADER con onda al pie -->
   <div class="header">
-    <div class="header-logo-wrap">
-      <img src="${logo}" alt="H&amp;Y Mundo Servicios">
+    <div class="deco-c1"></div>
+    <div class="deco-c2"></div>
+    <div class="deco-c3"></div>
+    <div class="header-inner">
+      <div class="header-logo-wrap">
+        <img src="${logo}" alt="H&amp;Y Mundo Servicios">
+      </div>
+      <div class="header-body">
+        <div class="doc-label">Informe Técnico de Intervención</div>
+        <h1>Limpieza y Desinfección — ${tipoServicio}</h1>
+        <div class="header-sub">Inocuar L&amp;D Total · NIT 901.318.638 · Medellín, Colombia</div>
+      </div>
+      <div class="report-badge">
+        <div class="badge-label">Reporte</div>
+        <div class="badge-num">N° ${String(reportNum).padStart(3,'0')}</div>
+        <div class="badge-tipo">${tipoServicio}</div>
+        <div class="badge-fecha">${fecha}</div>
+      </div>
     </div>
-    <div class="header-divider"></div>
-    <div class="header-body">
-      <div class="doc-label">Informe Técnico de Intervención</div>
-      <h1>Limpieza y Desinfección — ${tipoServicio}</h1>
-      <div class="header-sub">Inocuar L&amp;D Total · NIT 901.318.638 · Medellín, Colombia</div>
-    </div>
-    <div class="header-meta">
-      <div class="meta-badge">N° ${String(reportNum).padStart(3,'0')}</div>
-      <div class="meta-tipo">${tipoServicio}</div>
-      <div class="meta-fecha">${fecha}</div>
-    </div>
+    <!-- Onda blanca en el pie del header: el fill #F8F9FC = --gray-1 del kpi-strip -->
+    <svg class="header-wave" viewBox="0 0 794 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,34 L0,22 C200,2 480,34 794,14 L794,34 Z" fill="#F8F9FC"/>
+    </svg>
   </div>
 
-  <div class="gold-stripe"></div>
-
-  <div class="exec-summary">
-    <div class="exec-summary-title">Resumen Ejecutivo</div>
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi-strip-label">Resumen ejecutivo</div>
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-value sm">${horario}</div>
@@ -305,12 +331,14 @@ function buildHTML(data) {
     </div>
   </div>
 
+  <!-- 1. INFORMACIÓN -->
   <div class="section">
     <div class="section-header">
       <div class="section-num">1</div>
       <div class="section-title">Información de la Operación</div>
       <div class="section-badge">Datos generales</div>
     </div>
+    <div class="section-divider"></div>
     <div class="info-grid">
       <div class="info-cell">
         <div class="info-label">Cliente Final</div>
@@ -347,15 +375,18 @@ function buildHTML(data) {
     </div>
   </div>
 
+  <!-- 2. EQUIPO -->
   <div class="section">
     <div class="section-header">
       <div class="section-num">2</div>
       <div class="section-title">Equipo de Intervención</div>
       <div class="section-badge">Personal técnico</div>
     </div>
+    <div class="section-divider"></div>
     <div class="team-grid">${tecnicoCards}</div>
   </div>
 
+  <!-- 3. INSUMOS (condicional) -->
   ${insumos.length > 0 ? `
   <div class="section">
     <div class="section-header">
@@ -363,23 +394,28 @@ function buildHTML(data) {
       <div class="section-title">Trazabilidad de Insumos</div>
       <div class="section-badge">Control de calidad</div>
     </div>
-    <table class="insumos-table">
-      <thead>
-        <tr>
-          <th>Producto</th><th>Lote</th><th>Vencimiento</th>
-          <th>Concentración</th><th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>${insumosRows}</tbody>
-    </table>
+    <div class="section-divider"></div>
+    <div class="table-wrap">
+      <table class="insumos-table">
+        <thead>
+          <tr>
+            <th>Producto</th><th>Lote</th><th>Vencimiento</th>
+            <th>Concentración</th><th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>${insumosRows}</tbody>
+      </table>
+    </div>
   </div>` : ''}
 
+  <!-- 4 (o 3). PROCEDIMIENTO -->
   <div class="section">
     <div class="section-header">
       <div class="section-num">${insumos.length > 0 ? 4 : 3}</div>
       <div class="section-title">Descripción del Procedimiento Técnico</div>
       <div class="section-badge">4 fases</div>
     </div>
+    <div class="section-divider"></div>
     <div class="fases-grid">
       <div class="fase-card">
         <div class="fase-header">
@@ -411,28 +447,32 @@ function buildHTML(data) {
       </div>
     </div>
     ${observaciones !== 'Sin observaciones adicionales.' ? `
-    <div class="obs-box" style="margin-top:14px;">
+    <div class="obs-box">
       <strong>Observaciones del técnico</strong>
       ${observaciones}
     </div>` : ''}
   </div>
 
+  <!-- 5 (o 4). GALERÍA -->
   <div class="section">
     <div class="section-header">
       <div class="section-num">${insumos.length > 0 ? 5 : 4}</div>
       <div class="section-title">Registro Fotográfico</div>
       <div class="section-badge">${fotosArr.length} foto${fotosArr.length !== 1 ? 's' : ''}</div>
     </div>
+    <div class="section-divider"></div>
     <div class="gallery">
       ${galleryItems}
     </div>
   </div>
 
+  <!-- 6 (o 5). CONCLUSIÓN -->
   <div class="section">
     <div class="section-header">
       <div class="section-num">${insumos.length > 0 ? 6 : 5}</div>
       <div class="section-title">Conclusión y Certificación</div>
     </div>
+    <div class="section-divider"></div>
     <div class="conclusion-grid">
       <div class="concl-item">
         <div class="concl-check">✓</div>
@@ -469,11 +509,13 @@ function buildHTML(data) {
     </div>
   </div>
 
+  <!-- 7 (o 6). FIRMAS -->
   <div class="section">
     <div class="section-header">
       <div class="section-num">${insumos.length > 0 ? 7 : 6}</div>
       <div class="section-title">Autorización y Conformidad</div>
     </div>
+    <div class="section-divider"></div>
     <div class="firma-grid">
       <div class="firma-card">
         <div class="firma-space"></div>
