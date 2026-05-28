@@ -73,7 +73,7 @@ bot.start((ctx) => {
       'Este bot genera *reportes técnicos profesionales* de limpieza y desinfección en PDF, directamente desde tu celular.\n\n' +
       'Para solicitar acceso, comparte tu ID con H&Y Mundo Servicios:\n\n' +
       `📌 *Tu ID de Telegram:*\n\`${userId}\`\n\n` +
-      '📞 +57 300 151 6187\n' +
+      '📞 +57 302 390 3192\n' +
       '📧 inocuarldtotal@gmail.com',
       { parse_mode: 'Markdown' }
     );
