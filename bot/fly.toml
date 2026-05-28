@@ -1,0 +1,14 @@
+app = "hy-reportes-bot"
+primary_region = "mia"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium"
+  NODE_ENV = "production"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

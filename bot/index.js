@@ -28,7 +28,13 @@ async function htmlToPdf(htmlContent, filename) {
   try {
     browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+      ],
     });
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle2' });
