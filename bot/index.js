@@ -5,6 +5,7 @@ const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 const { buildHTML } = require('./template');
+const { buildDOCX } = require('./template-docx');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -168,9 +169,9 @@ bot.action('fotos_listo', (ctx) => {
     '_Ejemplo:_\n' +
     '`LK Econo Chlor | 251636 | 29/08/2026 | 6% | N`\n' +
     '`Alumi Clean | 249791 | 31/07/2026 | 3% | N`\n\n' +
-    '_Cuando termines, haz clic en "Generar PDF"._',
+    '_Cuando termines, haz clic en "Generar Reporte"._',
     { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-      [Markup.button.callback('📄 Generar PDF', 'generar_pdf')],
+      [Markup.button.callback('📤 Generar Reporte', 'elegir_formato')],
       [Markup.button.callback('❌ Cancelar', 'cancelar')]
     ]) }
   );
@@ -219,6 +220,109 @@ bot.action('generar_pdf', async (ctx) => {
   } catch (error) {
     console.error('Error generando reporte:', error);
     ctx.answerCbQuery('❌ Error al generar el PDF. Intenta nuevamente.', true);
+  }
+});
+
+bot.action('elegir_formato', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+
+  if (!session || session.step !== 'insumos') {
+    return ctx.answerCbQuery('Por favor completa los datos del reporte primero.', true);
+  }
+  if (!session.data.cliente || !session.data.reportNum) {
+    return ctx.answerCbQuery('❌ Faltan datos obligatorios.', true);
+  }
+
+  const count = session.insumos ? session.insumos.length : 0;
+  ctx.editMessageText(
+    `✅ *${count} insumo${count !== 1 ? 's' : ''} registrado${count !== 1 ? 's' : ''}.*\n\n` +
+    '📤 *¿En qué formato quieres el reporte?*',
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('📄 PDF', 'generar_pdf'), Markup.button.callback('📝 Word (.docx)', 'generar_word')],
+      [Markup.button.callback('📄+📝 Ambos', 'generar_ambos')],
+      [Markup.button.callback('❌ Cancelar', 'cancelar')],
+    ]) }
+  );
+});
+
+bot.action('generar_word', async (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+
+  if (!session || session.step !== 'insumos') {
+    return ctx.answerCbQuery('Por favor completa los datos del reporte primero.', true);
+  }
+  if (!session.data.cliente || !session.data.reportNum) {
+    return ctx.answerCbQuery('❌ Faltan datos obligatorios.', true);
+  }
+
+  try {
+    await ctx.answerCbQuery('⏳ Generando Word...');
+    const docBuffer = await buildDOCX(session.data);
+    const docFilename = `reporte-${session.data.reportNum}.docx`;
+
+    await ctx.replyWithDocument(
+      { source: docBuffer, filename: docFilename },
+      { caption: `📝 Reporte #${session.data.reportNum} — ${session.data.cliente}`, parse_mode: 'Markdown' }
+    );
+
+    delete userSessions[userId];
+    await ctx.reply(
+      '✅ *¡Reporte Word generado exitosamente!*\n\n¿Deseas crear otro?',
+      { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+        [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+        [Markup.button.callback('❌ Salir', 'cancelar')]
+      ]) }
+    );
+  } catch (error) {
+    console.error('Error generando Word:', error);
+    ctx.answerCbQuery('❌ Error al generar el Word. Intenta nuevamente.', true);
+  }
+});
+
+bot.action('generar_ambos', async (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+
+  if (!session || session.step !== 'insumos') {
+    return ctx.answerCbQuery('Por favor completa los datos del reporte primero.', true);
+  }
+  if (!session.data.cliente || !session.data.reportNum) {
+    return ctx.answerCbQuery('❌ Faltan datos obligatorios.', true);
+  }
+
+  try {
+    await ctx.answerCbQuery('⏳ Generando PDF y Word...');
+
+    const htmlContent = buildHTML(session.data);
+    const pdfFilename = `reporte-${session.data.reportNum}-${Date.now()}.pdf`;
+    const pdfPath = await htmlToPdf(htmlContent, pdfFilename);
+    const docBuffer = await buildDOCX(session.data);
+    const docFilename = `reporte-${session.data.reportNum}.docx`;
+
+    await ctx.replyWithDocument(
+      { source: pdfPath },
+      { caption: `📄 Reporte #${session.data.reportNum} — ${session.data.cliente} (PDF)`, parse_mode: 'Markdown' }
+    );
+    fs.unlink(pdfPath, () => {});
+
+    await ctx.replyWithDocument(
+      { source: docBuffer, filename: docFilename },
+      { caption: `📝 Reporte #${session.data.reportNum} — ${session.data.cliente} (Word)`, parse_mode: 'Markdown' }
+    );
+
+    delete userSessions[userId];
+    await ctx.reply(
+      '✅ *¡Ambos formatos generados!*\n\n¿Deseas crear otro?',
+      { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+        [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+        [Markup.button.callback('❌ Salir', 'cancelar')]
+      ]) }
+    );
+  } catch (error) {
+    console.error('Error generando reportes:', error);
+    ctx.answerCbQuery('❌ Error al generar los reportes. Intenta nuevamente.', true);
   }
 });
 
@@ -358,9 +462,9 @@ bot.on('text', async (ctx) => {
         ctx.reply(
           `✅ *Insumo agregado:* ${parts[0]}\n\n` +
           `*Insumos registrados (${session.insumos.length}):*\n${lista}\n\n` +
-          '_Agrega otro insumo o haz clic en "Generar PDF"._',
+          '_Agrega otro insumo o haz clic en "Generar Reporte"._',
           { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-            [Markup.button.callback('📄 Generar PDF', 'generar_pdf')],
+            [Markup.button.callback('📤 Generar Reporte', 'elegir_formato')],
             [Markup.button.callback('❌ Cancelar', 'cancelar')]
           ]) }
         );
