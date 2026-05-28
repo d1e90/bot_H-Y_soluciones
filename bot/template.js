@@ -1,11 +1,21 @@
 const path = require('path');
 const fs   = require('fs');
 
-const LOGO_PATH = path.resolve(__dirname, 'H&Y_LOGO_2.png');
+const LOGO_PATH  = path.resolve(__dirname, 'H&Y_LOGO_2.png');
+const FIRMA_PATH = path.resolve(__dirname, 'FIRMA 2.png');
 
 function logoBase64() {
   const data = fs.readFileSync(LOGO_PATH);
   return `data:image/png;base64,${data.toString('base64')}`;
+}
+
+function firmaBase64() {
+  try {
+    const data = fs.readFileSync(FIRMA_PATH);
+    return `data:image/png;base64,${data.toString('base64')}`;
+  } catch (_) {
+    return null;
+  }
 }
 
 function photoTag(b64) {
@@ -18,7 +28,8 @@ function photoTag(b64) {
 }
 
 function buildHTML(data) {
-  const logo = logoBase64();
+  const logo  = logoBase64();
+  const firma = firmaBase64();
   const {
     reportNum, cliente, contacto = '—', ubicacion = '—',
     equipo, fecha, horario, tecnicos,
@@ -518,7 +529,9 @@ function buildHTML(data) {
     <div class="section-divider"></div>
     <div class="firma-grid">
       <div class="firma-card">
-        <div class="firma-space"></div>
+        ${firma
+          ? `<img src="${firma}" style="height:70px;max-width:220px;object-fit:contain;display:block;margin:0 auto 8px;">`
+          : '<div class="firma-space"></div>'}
         <div class="firma-name">${tecnicosArr[0] || 'Director de Operaciones'}</div>
         <div class="firma-cargo">Director de Operaciones</div>
         <div class="firma-data">H&amp;Y Mundo Servicios S.A.S<br>+57 300 151 6187 · inocuarldtotal@gmail.com</div>

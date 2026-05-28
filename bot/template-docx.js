@@ -7,7 +7,7 @@ const {
 } = require('docx');
 
 const LOGO_PATH  = path.resolve(__dirname, 'H&Y_LOGO_2.png');
-const FIRMA_PATH = path.resolve(__dirname, 'firma-geimer.png');
+const FIRMA_PATH = path.resolve(__dirname, 'FIRMA 2.png');
 
 // Paleta (sin #)
 const N  = '0D1B2A'; // navy
