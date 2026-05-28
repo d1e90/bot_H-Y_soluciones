@@ -27,7 +27,7 @@ async function htmlToPdf(htmlContent, filename) {
   let browser;
   try {
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -69,17 +69,23 @@ bot.start((ctx) => {
   if (!isAllowed(userId)) {
     return ctx.reply(
       '🔐 *Bot H&Y — Acceso restringido*\n\n' +
-      `Tu ID de Telegram es:\n\`${userId}\`\n\n` +
-      'Comparte este número con H&Y Mundo Servicios para solicitar acceso.\n' +
-      '📞 +57 300 151 6187',
+      'Este bot genera *reportes técnicos profesionales* de limpieza y desinfección en PDF, directamente desde tu celular.\n\n' +
+      'Para solicitar acceso, comparte tu ID con H&Y Mundo Servicios:\n\n' +
+      `📌 *Tu ID de Telegram:*\n\`${userId}\`\n\n` +
+      '📞 +57 300 151 6187\n' +
+      '📧 inocuarldtotal@gmail.com',
       { parse_mode: 'Markdown' }
     );
   }
 
   ctx.reply(
-    '🤝 *¡Bienvenido a H&Y Generador de Reportes!*\n\n' +
-    `Tu ID de Telegram: \`${userId}\`\n\n` +
-    'Soy un bot para generar reportes de limpieza y desinfección.\n\n' +
+    '👋 *¡Bienvenido, tienes acceso!*\n' +
+    '*H&Y Mundo Servicios — Generador de Reportes*\n\n' +
+    `📌 Tu ID de Telegram: \`${userId}\`\n\n` +
+    '✅ Genera reportes PDF profesionales en minutos\n' +
+    '📸 Registro fotográfico embebido\n' +
+    '📋 Trazabilidad de insumos con lotes y vencimientos\n' +
+    '✍️ Firmas y certificación HACCP\n\n' +
     '¿Qué deseas hacer?',
     { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
       [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
