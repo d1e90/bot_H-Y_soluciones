@@ -9,7 +9,14 @@
       "Bash(browser-sync start *)",
       "Bash(which google-chrome *)",
       "Read(//usr/lib/**)",
-      "Bash(apt-cache show *)"
+      "Bash(apt-cache show *)",
+      "Bash(mkdir -p \"/root/H&Y MUNDO SERVICIOS/.claude/rules\")",
+      "Bash(timeout 8 npm start)",
+      "Bash(timeout 12 node index.js)",
+      "Bash(echo \"exit: $?\")"
+    ],
+    "additionalDirectories": [
+      "/root/H&Y MUNDO SERVICIOS/.claude"
     ]
   }
 }
