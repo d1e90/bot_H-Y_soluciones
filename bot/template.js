@@ -64,7 +64,6 @@ function buildHTML(data) {
     <div class="team-card">
       <div class="team-role">${i === 0 ? 'Director de Operaciones' : 'Auxiliar L&D'}</div>
       <div class="team-name">${t}</div>
-      <span class="cert-tag">✓ Certificado HACCP</span>
     </div>`).join('');
 
   const fotosArr = Array.isArray(fotos) ? fotos : [];
@@ -534,7 +533,7 @@ function buildHTML(data) {
           : '<div class="firma-space"></div>'}
         <div class="firma-name">${tecnicosArr[0] || 'Director de Operaciones'}</div>
         <div class="firma-cargo">Director de Operaciones</div>
-        <div class="firma-data">H&amp;Y Mundo Servicios S.A.S<br>+57 302 390 3192 · inocuarldtotal@gmail.com</div>
+        <div class="firma-data">H&amp;Y Mundo Servicios S.A.S<br>+57 300 151 6187 · inocuarldtotal@gmail.com</div>
       </div>
       <div class="firma-card">
         <div class="firma-space"></div>
@@ -555,7 +554,7 @@ function buildHTML(data) {
       <div class="footer-info">
         <strong>H&amp;Y Mundo Servicios S.A.S — Inocuar L&amp;D Total</strong><br>
         NIT 901.318.638 · Medellín, Antioquia, Colombia<br>
-        inocuarldtotal@gmail.com · +57 302 390 3192
+        inocuarldtotal@gmail.com · +57 300 151 6187
       </div>
     </div>
     <div class="footer-right">
