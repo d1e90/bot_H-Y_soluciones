@@ -224,7 +224,7 @@ async function buildDOCX(data) {
           spacing: { before: 80, after: 40 },
         }),
         p([r(techName, { color: N, bold: true, size: 26 })], { spacing: { before: 0, after: 40 } }),
-        p([r('✓ Certificado HACCP', { color: GR, bold: true, size: 16 })], { spacing: { before: 0, after: 80 } }),
+        p([r('✓ Certificado', { color: GR, bold: true, size: 16 })], { spacing: { before: 0, after: 80 } }),
       ],
       borders: {
         top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -447,7 +447,7 @@ async function buildDOCX(data) {
       alignment: AlignmentType.CENTER, spacing: { before: 0, after: 30 },
     }),
     p([r('H&Y Mundo Servicios S.A.S', { size: 18 })], { alignment: AlignmentType.CENTER }),
-    p([r('+57 302 390 3192  ·  inocuarldtotal@gmail.com', { color: G4, size: 16 })], {
+    p([r('+57 300 151 6187  ·  inocuarldtotal@gmail.com', { color: G4, size: 16 })], {
       alignment: AlignmentType.CENTER, spacing: { before: 0, after: 80 },
     })
   );
@@ -486,7 +486,7 @@ async function buildDOCX(data) {
   children.push(
     tbl([new TableRow({ children: [
       shCell(N, [
-        p([r('H&Y Mundo Servicios S.A.S — Inocuar L&D Total  ·  NIT 901.318.638  ·  Medellín, Antioquia, Colombia  ·  +57 302 390 3192', { color: WH, size: 16 })], {
+        p([r('H&Y Mundo Servicios S.A.S — Inocuar L&D Total  ·  NIT 901.318.638  ·  Medellín, Antioquia, Colombia  ·  +57 300 151 6187', { color: WH, size: 16 })], {
           spacing: { before: 80, after: 80 },
         }),
       ], { width: { size: 70, type: WidthType.PERCENTAGE }, verticalAlign: VerticalAlign.CENTER }),

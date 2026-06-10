@@ -86,7 +86,7 @@ bot.start((ctx) => {
     '✅ Genera reportes PDF profesionales en minutos\n' +
     '📸 Registro fotográfico embebido\n' +
     '📋 Trazabilidad de insumos con lotes y vencimientos\n' +
-    '✍️ Firmas y certificación HACCP\n\n' +
+    '✍️ Firmas y certificación\n\n' +
     '¿Qué deseas hacer?',
     { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
       [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
