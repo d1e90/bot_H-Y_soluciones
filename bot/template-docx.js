@@ -373,7 +373,7 @@ async function buildDOCX(data) {
   children.push(goldDivider());
 
   const conclusiones = [
-    { titulo: 'Procedimiento completado', texto: 'Intervención ejecutada conforme a protocolos de inocuidad y seguridad alimentaria HACCP.' },
+    { titulo: 'Procedimiento completado', texto: 'Intervención ejecutada conforme a protocolos de inocuidad y seguridad alimentaria.' },
     { titulo: 'Cumplimiento normativo',   texto: 'Trazabilidad completa de insumos: lotes, vencimientos y concentraciones documentados.' },
     { titulo: 'Documentación completa',   texto: 'Registro fotográfico disponible. Documentación lista para auditoría regulatoria.' },
     { titulo: 'Estado final verificado',  texto: 'Equipo funcional, desinfectado y listo para operación. Inocuidad confirmada.' },

@@ -488,7 +488,7 @@ function buildHTML(data) {
         <div class="concl-check">✓</div>
         <div class="concl-text">
           <strong>Procedimiento completado</strong>
-          <span>Intervención ejecutada conforme a protocolos de inocuidad y seguridad alimentaria HACCP.</span>
+          <span>Intervención ejecutada conforme a protocolos de inocuidad y seguridad alimentaria.</span>
         </div>
       </div>
       <div class="concl-item">
