@@ -24,7 +24,7 @@ function photoTag(b64) {
       <div class="ph-icon">📷</div>
       <div class="ph-text">Sin foto</div>
     </div>`;
-  return `<img src="${b64}" style="width:100%;height:180px;object-fit:cover;display:block;">`;
+  return `<img src="${b64}" style="width:100%;height:130px;object-fit:cover;display:block;">`;
 }
 
 function buildHTML(data) {
@@ -87,6 +87,10 @@ function buildHTML(data) {
       --gray-3:#B0B8C8; --gray-4:#6B7789;
       --text:#1A2332; --text-soft:#4A5568;
       --green:#145C38; --green-bg:#E0F0E8;
+      /* Escala de espaciado vertical: htmlToPdf() la reduce dinámicamente
+         cuando el bloque de firma no cabe en la última página, para minimizar
+         el blanco sobrante sin tener que recortar contenido a la mitad. */
+      --space-scale: 1;
     }
     *{margin:0;padding:0;box-sizing:border-box;
       -webkit-print-color-adjust:exact!important;
@@ -127,14 +131,15 @@ function buildHTML(data) {
     .header-wave{display:block;width:100%;height:34px;}
 
     /* === KPI STRIP === */
-    .kpi-strip{background:var(--gray-1);padding:20px 32px;
+    .kpi-strip{background:var(--gray-1);padding:calc(20px * var(--space-scale)) 32px;
       border-bottom:1px solid var(--gray-2);}
     .kpi-strip-label{font-size:9px;font-weight:700;letter-spacing:2.5px;
       text-transform:uppercase;color:var(--gray-4);margin-bottom:12px;}
     .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
     .kpi-card{background:#fff;border-radius:8px;padding:16px;
       border:1px solid var(--gray-2);border-top:3px solid var(--blue);
-      box-shadow:0 2px 10px rgba(0,0,0,0.055);}
+      box-shadow:0 2px 10px rgba(0,0,0,0.055);
+      page-break-inside:avoid;break-inside:avoid;}
     .kpi-card.gold{border-top-color:var(--gold);}
     .kpi-card.green{border-top-color:#2ECC82;}
     .kpi-value{font-size:24px;font-weight:800;color:var(--navy);
@@ -146,8 +151,8 @@ function buildHTML(data) {
       text-transform:uppercase;letter-spacing:.5px;}
 
     /* === SECTION === */
-    .section{padding:24px 32px;border-bottom:1px solid var(--gray-2);background:#fff;}
-    .section-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+    .section{padding:calc(24px * var(--space-scale)) 32px;border-bottom:1px solid var(--gray-2);background:#fff;}
+    .section-header{display:flex;align-items:center;gap:12px;margin-bottom:calc(14px * var(--space-scale));}
     .section-num{width:28px;height:28px;background:var(--navy);color:#fff;
       font-size:11px;font-weight:800;border-radius:50%;
       display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -157,12 +162,13 @@ function buildHTML(data) {
       text-transform:uppercase;padding:4px 12px;background:var(--blue-light);
       border-radius:100px;color:var(--blue);}
     .section-divider{height:2px;background:linear-gradient(90deg,var(--gold),transparent);
-      margin-bottom:16px;border-radius:2px;}
+      margin-bottom:calc(16px * var(--space-scale));border-radius:2px;}
 
     /* === INFO GRID === */
-    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(10px * var(--space-scale));}
     .info-cell{background:var(--gray-1);border-radius:6px;padding:12px 16px;
-      border:1px solid var(--gray-2);}
+      border:1px solid var(--gray-2);
+      page-break-inside:avoid;break-inside:avoid;}
     .info-label{font-size:9px;font-weight:700;letter-spacing:1.4px;
       text-transform:uppercase;color:var(--blue);margin-bottom:4px;}
     .info-value{font-size:13px;font-weight:600;color:var(--navy);}
@@ -172,10 +178,11 @@ function buildHTML(data) {
       text-transform:uppercase;padding:4px 10px;border-radius:4px;}
 
     /* === EQUIPO === */
-    .team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+    .team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(14px * var(--space-scale));}
     .team-card{border:1px solid var(--gray-2);border-left:4px solid var(--gold);
       padding:16px 18px;background:#fff;border-radius:0 8px 8px 0;
-      box-shadow:0 2px 10px rgba(0,0,0,0.055);}
+      box-shadow:0 2px 10px rgba(0,0,0,0.055);
+      page-break-inside:avoid;break-inside:avoid;}
     .team-role{font-size:9px;font-weight:700;letter-spacing:1.5px;
       text-transform:uppercase;color:var(--blue);margin-bottom:6px;}
     .team-name{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:8px;}
@@ -194,6 +201,7 @@ function buildHTML(data) {
       color:rgba(255,255,255,.75);}
     .insumos-table td{padding:11px 13px;border-bottom:1px solid var(--gray-2);
       font-size:12px;vertical-align:middle;}
+    .insumos-table tr{page-break-inside:avoid;break-inside:avoid;}
     .insumos-table tbody tr:last-child td{border-bottom:none;}
     .insumos-table tbody tr:nth-child(even) td{background:var(--gray-1);}
     .prod-name{font-weight:700;color:var(--navy);}
@@ -213,9 +221,10 @@ function buildHTML(data) {
     .alerta-row td{border-bottom-color:#FCD0D0!important;}
 
     /* === FASES === */
-    .fases-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+    .fases-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(12px * var(--space-scale));}
     .fase-card{border:1px solid var(--gray-2);border-radius:8px;
-      padding:16px;background:#fff;box-shadow:0 2px 10px rgba(0,82,163,.05);}
+      padding:16px;background:#fff;box-shadow:0 2px 10px rgba(0,82,163,.05);
+      page-break-inside:avoid;break-inside:avoid;}
     .fase-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
     .fase-num{width:30px;height:30px;background:var(--gold);color:var(--navy);
       font-size:13px;font-weight:800;border-radius:50%;
@@ -226,10 +235,11 @@ function buildHTML(data) {
     .fase-body strong{color:var(--navy);font-weight:700;}
 
     /* === GALERÍA === */
-    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+    .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(10px * var(--space-scale));}
     .gallery-item{border-radius:8px;overflow:hidden;border:1px solid var(--gray-2);
-      box-shadow:0 2px 10px rgba(0,0,0,0.07);}
-    .gallery-placeholder{height:180px;background:var(--gray-1);
+      box-shadow:0 2px 10px rgba(0,0,0,0.07);
+      page-break-inside:avoid;break-inside:avoid;}
+    .gallery-placeholder{height:130px;background:var(--gray-1);
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:8px;}
     .ph-icon{font-size:28px;opacity:.4;}
@@ -240,9 +250,10 @@ function buildHTML(data) {
       padding:7px 12px;text-align:center;}
 
     /* === CONCLUSIÓN === */
-    .conclusion-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .conclusion-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(10px * var(--space-scale));}
     .concl-item{display:flex;gap:12px;padding:13px 15px;
-      background:var(--green-bg);border-radius:6px;border:1px solid #8ECFAA;}
+      background:var(--green-bg);border-radius:6px;border:1px solid #8ECFAA;
+      page-break-inside:avoid;break-inside:avoid;}
     .concl-check{color:var(--green);font-size:16px;font-weight:800;
       flex-shrink:0;margin-top:1px;}
     .concl-text strong{display:block;font-size:10px;font-weight:800;
@@ -254,6 +265,7 @@ function buildHTML(data) {
     .concl-closing strong{color:var(--blue);}
 
     /* === FIRMAS === */
+    .firma-footer-block{page-break-inside:avoid;break-inside:avoid;}
     .firma-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:40px;margin-top:10px;}
     .firma-card{text-align:center;}
     .firma-space{height:60px;border-bottom:1.5px solid var(--navy);margin-bottom:10px;}
@@ -519,48 +531,50 @@ function buildHTML(data) {
     </div>
   </div>
 
-  <!-- 7 (o 6). FIRMAS -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-num">${insumos.length > 0 ? 7 : 6}</div>
-      <div class="section-title">Autorización y Conformidad</div>
-    </div>
-    <div class="section-divider"></div>
-    <div class="firma-grid">
-      <div class="firma-card">
-        ${firma
-          ? `<img src="${firma}" style="height:70px;max-width:220px;object-fit:contain;display:block;margin:0 auto 8px;">`
-          : '<div class="firma-space"></div>'}
-        <div class="firma-name">${tecnicosArr[0] || 'Director de Operaciones'}</div>
-        <div class="firma-cargo">Director de Operaciones</div>
-        <div class="firma-data">H&amp;Y Mundo Servicios S.A.S<br>+57 300 151 6187 · inocuarldtotal@gmail.com</div>
+  <!-- 7 (o 6). FIRMAS + FOOTER (bloque unido para que no se separen entre páginas) -->
+  <div class="firma-footer-block">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">${insumos.length > 0 ? 7 : 6}</div>
+        <div class="section-title">Autorización y Conformidad</div>
       </div>
-      <div class="firma-card">
-        <div class="firma-space"></div>
-        <div class="firma-name">Jefe de Planta / Representante</div>
-        <div class="firma-cargo">${cliente}</div>
-        <div class="firma-fields">
-          <div>Nombre:</div>
-          <div>Cédula:</div>
-          <div>Fecha:</div>
+      <div class="section-divider"></div>
+      <div class="firma-grid">
+        <div class="firma-card">
+          ${firma
+            ? `<img src="${firma}" style="height:70px;max-width:220px;object-fit:contain;display:block;margin:0 auto 8px;">`
+            : '<div class="firma-space"></div>'}
+          <div class="firma-name">${tecnicosArr[0] || 'Director de Operaciones'}</div>
+          <div class="firma-cargo">Director de Operaciones</div>
+          <div class="firma-data">H&amp;Y Mundo Servicios S.A.S<br>+57 300 151 6187 · inocuarldtotal@gmail.com</div>
+        </div>
+        <div class="firma-card">
+          <div class="firma-space"></div>
+          <div class="firma-name">Jefe de Planta / Representante</div>
+          <div class="firma-cargo">${cliente}</div>
+          <div class="firma-fields">
+            <div>Nombre:</div>
+            <div>Cédula:</div>
+            <div>Fecha:</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="footer">
-    <div class="footer-left">
-      <img src="${logo}" alt="H&amp;Y" class="footer-logo">
-      <div class="footer-info">
-        <strong>H&amp;Y Mundo Servicios S.A.S — Inocuar L&amp;D Total</strong><br>
-        NIT 901.318.638 · Medellín, Antioquia, Colombia<br>
-        inocuarldtotal@gmail.com · +57 300 151 6187
+    <div class="footer">
+      <div class="footer-left">
+        <img src="${logo}" alt="H&amp;Y" class="footer-logo">
+        <div class="footer-info">
+          <strong>H&amp;Y Mundo Servicios S.A.S — Inocuar L&amp;D Total</strong><br>
+          NIT 901.318.638 · Medellín, Antioquia, Colombia<br>
+          inocuarldtotal@gmail.com · +57 300 151 6187
+        </div>
       </div>
-    </div>
-    <div class="footer-right">
-      <div class="footer-docref">REF: HY-IT-${String(reportNum).padStart(3,'0')} · ${new Date().getFullYear()}</div>
-      <div class="footer-stamp">Documento auditable · Generado ${fecha}</div>
-      <div class="footer-stamp" style="margin-top:2px;">Confidencial — Solo para uso del cliente</div>
+      <div class="footer-right">
+        <div class="footer-docref">REF: HY-IT-${String(reportNum).padStart(3,'0')} · ${new Date().getFullYear()}</div>
+        <div class="footer-stamp">Documento auditable · Generado ${fecha}</div>
+        <div class="footer-stamp" style="margin-top:2px;">Confidencial — Solo para uso del cliente</div>
+      </div>
     </div>
   </div>
 

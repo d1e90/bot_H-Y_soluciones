@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Telegraf, Markup } = require('telegraf');
 const puppeteer = require('puppeteer');
+const { PDFDocument } = require('pdf-lib');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
@@ -24,6 +25,41 @@ function isAllowed(userId) {
 
 // ============ UTILIDADES ============
 
+const PDF_OPTIONS = {
+  format: 'A4',
+  printBackground: true,
+  margin: { top: 0, right: 0, bottom: 0, left: 0 }
+};
+// Niveles de compresión de espaciado vertical a probar, de mayor a menor calidad visual.
+const PDF_SPACE_SCALES = [1, 0.85, 0.7, 0.55];
+
+// Genera el PDF probando distintos niveles de --space-scale y se queda con el
+// primero que logre ahorrar una página completa frente al tamaño normal (scale 1).
+// Esto evita que la firma quede sola en una última hoja casi en blanco, sin
+// tener que cortar ninguna tarjeta/fila a la mitad (eso ya lo evita el CSS).
+async function generarPdfCompacto(page) {
+  let mejorBuffer = await page.pdf(PDF_OPTIONS);
+  let mejorPaginas = (await PDFDocument.load(mejorBuffer)).getPageCount();
+  const paginasOriginales = mejorPaginas;
+
+  for (const scale of PDF_SPACE_SCALES.slice(1)) {
+    await page.evaluate((s) => {
+      document.documentElement.style.setProperty('--space-scale', s);
+    }, scale);
+
+    const buffer = await page.pdf(PDF_OPTIONS);
+    const paginas = (await PDFDocument.load(buffer)).getPageCount();
+
+    if (paginas < mejorPaginas) {
+      mejorBuffer = buffer;
+      mejorPaginas = paginas;
+    }
+    if (paginas < paginasOriginales) break;
+  }
+
+  return mejorBuffer;
+}
+
 async function htmlToPdf(htmlContent, filename) {
   let browser;
   try {
@@ -40,17 +76,13 @@ async function htmlToPdf(htmlContent, filename) {
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle2' });
 
+    const pdfBuffer = await generarPdfCompacto(page);
+
     const pdfPath = path.join(__dirname, 'pdfs', filename);
     if (!fs.existsSync(path.join(__dirname, 'pdfs'))) {
       fs.mkdirSync(path.join(__dirname, 'pdfs'), { recursive: true });
     }
-
-    await page.pdf({
-      path: pdfPath,
-      format: 'A4',
-      printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 }
-    });
+    fs.writeFileSync(pdfPath, pdfBuffer);
 
     await browser.close();
     return pdfPath;
