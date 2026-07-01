@@ -61,4 +61,4 @@ Agregar un step en el medio sin actualizar los handlers subsiguientes rompe el f
 No hay test suite. Para confirmar que un cambio funciona:
 
 1. `cd bot && npm run dev` debe arrancar sin errores en consola
-2. En Telegram: `/start` → `Nuevo Reporte` → completar todos los campos → subir 6+ fotos → agregar insumos con formato `Nombre | Lote | Vencimiento | Concentración | S/N` → `Generar PDF` → recibir PDF en el chat
+2. En Telegram: `/start` → `Nuevo Reporte` → completar todos los campos → subir 6+ fotos → agregar insumos con el asistente paso a paso (nombre, lote, vencimiento, concentración, vencido) → revisar el resumen → `Generar PDF` → recibir PDF en el chat

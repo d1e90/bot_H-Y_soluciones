@@ -117,9 +117,8 @@ const AYUDA_SECCIONES = {
     'Se piden entre *6 y 20 fotos* del trabajo (antes/durante/después). Haz clic en "Fotos Listo" cuando termines.',
   insumos:
     '🧪 *Sobre los insumos*\n\n' +
-    'Se agregan uno por uno con el formato:\n' +
-    '`Nombre | Lote | Vencimiento | Concentración | S/N`\n' +
-    '_(S/N = si el insumo está vencido, Sí o No)_',
+    'Se agregan uno por uno con un asistente: nombre, lote, vencimiento, concentración y si está vencido (con botones Sí/No).\n\n' +
+    'Si ya usaste un producto antes, el bot te lo ofrece como botón para no volver a escribirlo. Puedes editar cualquier insumo (incluyendo el vencimiento) desde el resumen final.',
   formato:
     '📄 *Formato de salida*\n\n' +
     'Al finalizar puedes elegir generar el reporte en PDF, Word, o ambos.',
@@ -209,6 +208,74 @@ function pedirCliente(ctx) {
       [Markup.button.callback('❌ Cancelar', 'cancelar')]
     ]) }
   );
+}
+
+// ============ ASISTENTE DE INSUMOS ============
+
+const productosFrecuentes = {};
+
+function registrarProductoFrecuente(userId, insumo) {
+  const lista = (productosFrecuentes[userId] || []).filter(
+    (p) => p.nombre.toLowerCase() !== insumo.nombre.toLowerCase()
+  );
+  lista.unshift({ nombre: insumo.nombre, concentracion: insumo.concentracion });
+  productosFrecuentes[userId] = lista.slice(0, 6);
+}
+
+function productoFrecuenteKeyboard(frecuentes) {
+  const rows = frecuentes.map((p, i) => [Markup.button.callback(p.nombre, `insumo_producto_${i}`)]);
+  rows.push([Markup.button.callback('🆕 Otro producto', 'insumo_producto_nuevo')]);
+  rows.push([Markup.button.callback('❌ Cancelar', 'cancelar')]);
+  return Markup.inlineKeyboard(rows);
+}
+
+function iniciarAsistenteInsumo(ctx, userId, session, encabezado) {
+  session.insumoWizard = { paso: 'nombre', datos: {} };
+  const frecuentes = productosFrecuentes[userId] || [];
+  const texto = encabezado
+    ? `${encabezado}\n\n🧪 *¿Qué insumo vas a agregar?*\n\nElige uno usado antes o agrega uno nuevo:`
+    : '🧪 *¿Qué insumo vas a agregar?*\n\nElige uno usado antes o agrega uno nuevo:';
+
+  if (frecuentes.length) {
+    ctx.editMessageText(texto, { parse_mode: 'Markdown', ...productoFrecuenteKeyboard(frecuentes) });
+  } else {
+    ctx.editMessageText(
+      (encabezado ? `${encabezado}\n\n` : '') +
+      '🧪 *Insumo — Nombre*\n\n¿Cuál es el nombre del insumo?\n_Ej: LK Econo Chlor_',
+      { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('❌ Cancelar', 'cancelar')]]) }
+    );
+  }
+}
+
+function preguntarVencido(ctx, wiz) {
+  wiz.paso = 'vencido';
+  ctx.reply(
+    `🧪 *Insumo:* ${wiz.datos.nombre}\n` +
+    `*Lote:* ${wiz.datos.lote}\n` +
+    `*Vencimiento:* ${wiz.datos.vencimiento}\n` +
+    `*Concentración:* ${wiz.datos.concentracion}\n\n` +
+    '¿Está vencido?',
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('✅ No', 'insumo_vencido_no'), Markup.button.callback('⚠️ Sí', 'insumo_vencido_si')],
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ]) }
+  );
+}
+
+function buildInsumosResumenTexto(session) {
+  const lista = session.insumos
+    .map((ins, i) => `${i + 1}. *${ins.nombre}* — Lote ${ins.lote}, vence ${ins.vencimiento}${ins.vencido ? ' ⚠️ VENCIDO' : ''}`)
+    .join('\n');
+  return `✅ *Insumos registrados (${session.insumos.length}):*\n${lista}\n\n¿Qué deseas hacer?`;
+}
+
+function insumosResumenKeyboard() {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback('➕ Agregar otro insumo', 'agregar_insumo')],
+    [Markup.button.callback('✏️ Editar un insumo', 'editar_insumo_menu')],
+    [Markup.button.callback('📝 Ver Resumen', 'ver_resumen')],
+    [Markup.button.callback('❌ Cancelar', 'cancelar')]
+  ]);
 }
 
 // ============ COMANDOS ============
@@ -379,21 +446,7 @@ bot.action('fotos_listo', (ctx) => {
     return;
   }
 
-  ctx.editMessageText(
-    `✅ *${fotosCount} fotos guardadas.*\n\n` +
-    '_Paso 12 de 12_\n\n' +
-    '💊 *Insumos utilizados*\n\n' +
-    'Envía cada insumo en el formato:\n' +
-    '`Nombre | Lote | Vencimiento | Concentración | Vencido(S/N)`\n\n' +
-    '_Ejemplo:_\n' +
-    '`LK Econo Chlor | 251636 | 29/08/2026 | 6% | N`\n' +
-    '`Alumi Clean | 249791 | 31/07/2026 | 3% | N`\n\n' +
-    '_Cuando termines, haz clic en "Ver Resumen"._',
-    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-      [Markup.button.callback('📝 Ver Resumen', 'ver_resumen')],
-      [Markup.button.callback('❌ Cancelar', 'cancelar')]
-    ]) }
-  );
+  iniciarAsistenteInsumo(ctx, userId, session, `✅ *${fotosCount} fotos guardadas.*\n\n_Paso 12 de 12_`);
 });
 
 bot.action('ver_resumen', (ctx) => {
@@ -467,16 +520,139 @@ bot.action('rehacer_insumos', (ctx) => {
   session.insumos = [];
   session.data.insumos = [];
 
+  iniciarAsistenteInsumo(ctx, userId, session, '🧪 *Rehaciendo insumos*');
+});
+
+bot.action('agregar_insumo', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || session.step !== 'insumos') return ctx.answerCbQuery('Sesión no válida.', true);
+
+  iniciarAsistenteInsumo(ctx, userId, session);
+});
+
+bot.action(/^insumo_producto_(\d+|nuevo)$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || !session.insumoWizard) return ctx.answerCbQuery('Sesión no válida.', true);
+  const valor = ctx.match[1];
+
+  if (valor === 'nuevo') {
+    ctx.editMessageText(
+      '🧪 *Insumo — Nombre*\n\n¿Cuál es el nombre del insumo?\n_Ej: LK Econo Chlor_',
+      { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('❌ Cancelar', 'cancelar')]]) }
+    );
+    return;
+  }
+
+  const producto = (productosFrecuentes[userId] || [])[Number(valor)];
+  if (!producto) return ctx.answerCbQuery('Producto no encontrado.', true);
+
+  session.insumoWizard.datos.nombre = producto.nombre;
+  session.insumoWizard.datos.concentracion = producto.concentracion;
+  session.insumoWizard.paso = 'lote';
+
   ctx.editMessageText(
-    '🧪 *Rehaciendo insumos*\n\n' +
-    'Envía cada insumo en el formato:\n' +
-    '`Nombre | Lote | Vencimiento | Concentración | Vencido(S/N)`\n\n' +
-    '_Cuando termines, haz clic en "Ver Resumen"._',
+    `✅ Producto: *${producto.nombre}* (${producto.concentracion})\n\n` +
+    '🧪 *Insumo — Lote*\n\n¿Cuál es el número de lote?\n_Ej: 251636_',
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('❌ Cancelar', 'cancelar')]]) }
+  );
+});
+
+bot.action(/^insumo_vencido_(si|no)$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || !session.insumoWizard) return ctx.answerCbQuery('Sesión no válida.', true);
+
+  const insumo = { ...session.insumoWizard.datos, vencido: ctx.match[1] === 'si' };
+  if (!session.insumos) session.insumos = [];
+  session.insumos.push(insumo);
+  session.data.insumos = session.insumos;
+  registrarProductoFrecuente(userId, insumo);
+  session.insumoWizard = null;
+
+  ctx.editMessageText(buildInsumosResumenTexto(session), { parse_mode: 'Markdown', ...insumosResumenKeyboard() });
+});
+
+bot.action('ver_insumos', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || !session.insumos) return ctx.answerCbQuery('Sesión no válida.', true);
+  ctx.editMessageText(buildInsumosResumenTexto(session), { parse_mode: 'Markdown', ...insumosResumenKeyboard() });
+});
+
+bot.action('editar_insumo_menu', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || !session.insumos || !session.insumos.length) {
+    return ctx.answerCbQuery('No hay insumos para editar.', true);
+  }
+
+  const rows = session.insumos.map((ins, i) => [Markup.button.callback(`${i + 1}. ${ins.nombre}`, `editar_insumo_${i}`)]);
+  rows.push([Markup.button.callback('⬅️ Volver', 'ver_insumos')]);
+  ctx.editMessageText('✏️ *¿Cuál insumo quieres corregir?*', { parse_mode: 'Markdown', ...Markup.inlineKeyboard(rows) });
+});
+
+bot.action(/^editar_insumo_(\d+)$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  const index = Number(ctx.match[1]);
+  const insumo = session && session.insumos && session.insumos[index];
+  if (!insumo) return ctx.answerCbQuery('Insumo no encontrado.', true);
+
+  ctx.editMessageText(
+    `✏️ *Editando:* ${insumo.nombre}\n\n` +
+    `Lote: ${insumo.lote}\nVencimiento: ${insumo.vencimiento}\nConcentración: ${insumo.concentracion}\nVencido: ${insumo.vencido ? 'Sí' : 'No'}\n\n` +
+    '¿Qué campo quieres corregir?',
     { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-      [Markup.button.callback('📝 Ver Resumen', 'ver_resumen')],
-      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+      [Markup.button.callback('Nombre', `editar_campo_insumo_${index}_nombre`), Markup.button.callback('Lote', `editar_campo_insumo_${index}_lote`)],
+      [Markup.button.callback('Vencimiento', `editar_campo_insumo_${index}_vencimiento`), Markup.button.callback('Concentración', `editar_campo_insumo_${index}_concentracion`)],
+      [Markup.button.callback('Vencido: cambiar', `editar_campo_insumo_${index}_vencido`)],
+      [Markup.button.callback('⬅️ Volver', 'editar_insumo_menu')]
     ]) }
   );
+});
+
+bot.action(/^editar_campo_insumo_(\d+)_(nombre|lote|vencimiento|concentracion)$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  const index = Number(ctx.match[1]);
+  const campo = ctx.match[2];
+  const insumo = session && session.insumos && session.insumos[index];
+  if (!insumo) return ctx.answerCbQuery('Insumo no encontrado.', true);
+
+  session.editingInsumo = { index, campo };
+  const etiquetas = { nombre: 'Nombre', lote: 'Lote', vencimiento: 'Vencimiento', concentracion: 'Concentración' };
+  ctx.editMessageText(
+    `✏️ *${etiquetas[campo]} actual:* ${insumo[campo]}\n\nEscribe el nuevo valor:`,
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('⬅️ Cancelar edición', `editar_insumo_${index}`)]]) }
+  );
+});
+
+bot.action(/^editar_campo_insumo_(\d+)_vencido$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  const index = Number(ctx.match[1]);
+  const insumo = session && session.insumos && session.insumos[index];
+  if (!insumo) return ctx.answerCbQuery('Insumo no encontrado.', true);
+
+  ctx.editMessageText(
+    `✏️ *¿${insumo.nombre} está vencido?*`,
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('✅ No', `set_insumo_vencido_${index}_no`), Markup.button.callback('⚠️ Sí', `set_insumo_vencido_${index}_si`)]
+    ]) }
+  );
+});
+
+bot.action(/^set_insumo_vencido_(\d+)_(si|no)$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  const index = Number(ctx.match[1]);
+  const insumo = session && session.insumos && session.insumos[index];
+  if (!insumo) return ctx.answerCbQuery('Insumo no encontrado.', true);
+
+  insumo.vencido = ctx.match[2] === 'si';
+  ctx.editMessageText(buildInsumosResumenTexto(session), { parse_mode: 'Markdown', ...insumosResumenKeyboard() });
 });
 
 bot.action('generar_pdf', async (ctx) => {
@@ -682,6 +858,61 @@ bot.on('text', async (ctx) => {
 
   const text = ctx.message.text.trim();
 
+  if (session.editingInsumo) {
+    const { index, campo } = session.editingInsumo;
+    if (session.insumos && session.insumos[index]) {
+      session.insumos[index][campo] = text;
+      session.data.insumos = session.insumos;
+    }
+    session.editingInsumo = null;
+    ctx.reply(buildInsumosResumenTexto(session), { parse_mode: 'Markdown', ...insumosResumenKeyboard() });
+    return;
+  }
+
+  if (session.insumoWizard) {
+    const wiz = session.insumoWizard;
+
+    if (wiz.paso === 'nombre') {
+      wiz.datos.nombre = text;
+      wiz.paso = 'lote';
+      ctx.reply(
+        '🧪 *Insumo — Lote*\n\n¿Cuál es el número de lote?\n_Ej: 251636_',
+        { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('❌ Cancelar', 'cancelar')]]) }
+      );
+      return;
+    }
+
+    if (wiz.paso === 'lote') {
+      wiz.datos.lote = text;
+      wiz.paso = 'vencimiento';
+      ctx.reply(
+        '🧪 *Insumo — Vencimiento*\n\n¿Fecha de vencimiento?\n_Ej: 29/08/2026_',
+        { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('❌ Cancelar', 'cancelar')]]) }
+      );
+      return;
+    }
+
+    if (wiz.paso === 'vencimiento') {
+      wiz.datos.vencimiento = text;
+      if (wiz.datos.concentracion) {
+        preguntarVencido(ctx, wiz);
+        return;
+      }
+      wiz.paso = 'concentracion';
+      ctx.reply(
+        '🧪 *Insumo — Concentración*\n\n¿Cuál es la concentración?\n_Ej: 6%_',
+        { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('❌ Cancelar', 'cancelar')]]) }
+      );
+      return;
+    }
+
+    if (wiz.paso === 'concentracion') {
+      wiz.datos.concentracion = text;
+      preguntarVencido(ctx, wiz);
+      return;
+    }
+  }
+
   if (session.editing) {
     session.data[session.editing] = text;
     session.editing = null;
@@ -814,38 +1045,12 @@ bot.on('text', async (ctx) => {
       );
       break;
 
-    case 'insumos': {
-      const parts = text.split('|').map(p => p.trim());
-      if (parts.length === 5) {
-        const insumo = {
-          nombre: parts[0],
-          lote: parts[1],
-          vencimiento: parts[2],
-          concentracion: parts[3],
-          vencido: parts[4].toLowerCase() === 's'
-        };
-        if (!session.insumos) session.insumos = [];
-        session.insumos.push(insumo);
-        session.data.insumos = session.insumos;
-
-        const lista = session.insumos.map((ins, i) => `${i + 1}. ${ins.nombre}`).join('\n');
-        ctx.reply(
-          `✅ *Insumo agregado:* ${parts[0]}\n\n` +
-          `*Insumos registrados (${session.insumos.length}):*\n${lista}\n\n` +
-          '_Agrega otro insumo o haz clic en "Ver Resumen"._',
-          { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-            [Markup.button.callback('📝 Ver Resumen', 'ver_resumen')],
-            [Markup.button.callback('❌ Cancelar', 'cancelar')]
-          ]) }
-        );
-      } else {
-        ctx.reply(
-          '❌ Formato incorrecto. Usa:\n`Nombre | Lote | Vencimiento | Concentración | S/N`',
-          { parse_mode: 'Markdown' }
-        );
-      }
+    case 'insumos':
+      ctx.reply(
+        'Usa los botones del mensaje anterior para continuar.',
+        { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('📝 Ver Resumen', 'ver_resumen')]]) }
+      );
       break;
-    }
   }
 });
 
