@@ -101,6 +101,34 @@ bot.command('cancelar', (ctx) => {
   ctx.reply('❌ Reporte cancelado. Usa /start para comenzar de nuevo.');
 });
 
+bot.command('ayuda', (ctx) => {
+  ctx.reply(
+    '🆘 *Ayuda — Bot H&Y Generador de Reportes*\n\n' +
+    '*¿Qué hace este bot?*\n' +
+    'Genera reportes técnicos profesionales (PDF y/o Word) de servicios de limpieza y desinfección, con fotos, insumos y firma incluidos.\n\n' +
+    '*¿Qué NO hace?*\n' +
+    'No corrige ni valida datos técnicos, no guarda historial permanente (si el bot se reinicia, un reporte a medias se pierde) y no reemplaza la firma física en el punto de servicio.\n\n' +
+    '*Comandos disponibles:*\n' +
+    '/start — Inicia el bot o crea un nuevo reporte\n' +
+    '/cancelar — Cancela el reporte en curso\n' +
+    '/ayuda — Muestra este mensaje\n\n' +
+    '*Flujo del reporte (12 pasos):*\n' +
+    'Cliente → Tipo de servicio → N° de reporte → Contacto → Ubicación → Equipo → Fecha → Horario → Técnicos → Observaciones → Fotos → Insumos\n\n' +
+    '*Sobre las fotos:*\n' +
+    'Se piden entre *6 y 20 fotos* del trabajo (antes/durante/después). Haz clic en "Fotos Listo" cuando termines.\n\n' +
+    '*Sobre los insumos:*\n' +
+    'Se agregan uno por uno con el formato:\n' +
+    '`Nombre | Lote | Vencimiento | Concentración | S/N`\n' +
+    '_(S/N = si el insumo está vencido, Sí o No)_\n\n' +
+    '*Formato de salida:*\n' +
+    'Al finalizar puedes elegir generar el reporte en PDF, Word, o ambos.\n\n' +
+    '*¿Problemas o dudas adicionales?*\n' +
+    '📞 +57 300 151 6187\n' +
+    '📧 inocuarldtotal@gmail.com',
+    { parse_mode: 'Markdown' }
+  );
+});
+
 // ============ ACCIONES CON BOTONES ============
 
 bot.action('nuevo_reporte', (ctx) => {
@@ -431,7 +459,7 @@ bot.on('text', async (ctx) => {
       session.fotos = { array: [] };
       ctx.reply(
         '📸 *Paso 11 de 12 — Registro fotográfico*\n\n' +
-        'Envía entre *6 y 10 fotos* del trabajo realizado.\n\n' +
+        'Envía entre *6 y 20 fotos* del trabajo realizado.\n\n' +
         'Puedes incluir:\n' +
         '• Fotos ANTES\n' +
         '• Fotos DURANTE\n' +
@@ -492,9 +520,9 @@ bot.on('photo', async (ctx) => {
   try {
     const fotosCount = (session.fotos.array && session.fotos.array.length) || 0;
 
-    if (fotosCount >= 10) {
+    if (fotosCount >= 20) {
       ctx.reply(
-        '⚠️ Ya alcanzaste el máximo de 10 fotos. Haz clic en "Fotos Listo" para continuar.',
+        '⚠️ Ya alcanzaste el máximo de 20 fotos. Haz clic en "Fotos Listo" para continuar.',
         { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
           [Markup.button.callback('✅ Fotos Listo', 'fotos_listo')],
           [Markup.button.callback('❌ Cancelar', 'cancelar')]
@@ -519,11 +547,11 @@ bot.on('photo', async (ctx) => {
     let mensaje;
     if (nuevaCount >= 6) {
       mensaje =
-        `✅ *Foto ${nuevaCount}/10 guardada.*\n\n` +
-        '_Mínimo alcanzado. Puedes continuar o agregar más (hasta 10)._';
+        `✅ *Foto ${nuevaCount}/20 guardada.*\n\n` +
+        '_Mínimo alcanzado. Puedes continuar o agregar más (hasta 20)._';
     } else {
       mensaje =
-        `✅ *Foto ${nuevaCount}/10 guardada.*\n\n` +
+        `✅ *Foto ${nuevaCount}/20 guardada.*\n\n` +
         `_Falta${faltanMinimo === 1 ? '' : 'n'} ${faltanMinimo} foto${faltanMinimo === 1 ? '' : 's'} para el mínimo requerido._`;
     }
 
@@ -549,6 +577,12 @@ bot.catch((err, ctx) => {
 });
 
 // ============ INICIAR BOT ============
+
+bot.telegram.setMyCommands([
+  { command: 'start', description: 'Iniciar el bot / nuevo reporte' },
+  { command: 'ayuda', description: 'Ver ayuda y alcances del bot' },
+  { command: 'cancelar', description: 'Cancelar el reporte en curso' },
+]);
 
 bot.launch().then(() => {
   console.log('✅ Bot iniciado. Escuchando mensajes...');
