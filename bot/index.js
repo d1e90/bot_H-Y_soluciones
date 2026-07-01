@@ -61,6 +61,74 @@ async function htmlToPdf(htmlContent, filename) {
   }
 }
 
+// ============ MENÚ PRINCIPAL Y AYUDA ============
+
+function mainMenuMessage(userId) {
+  return {
+    text:
+      '👋 *¡Bienvenido, tienes acceso!*\n' +
+      '*H&Y Mundo Servicios — Generador de Reportes*\n\n' +
+      `📌 Tu ID de Telegram: \`${userId}\`\n\n` +
+      '✅ Genera reportes PDF profesionales en minutos\n' +
+      '📸 Registro fotográfico embebido\n' +
+      '📋 Trazabilidad de insumos con lotes y vencimientos\n' +
+      '✍️ Firmas y certificación\n\n' +
+      '¿Qué deseas hacer?',
+    keyboard: Markup.inlineKeyboard([
+      [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+      [Markup.button.callback('❓ Ayuda', 'ayuda_menu')],
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ])
+  };
+}
+
+const AYUDA_MENU_TEXTO =
+  '🆘 *Ayuda — Bot H&Y Generador de Reportes*\n\n' +
+  'Selecciona un tema para ver más detalles:';
+
+function ayudaMenuKeyboard() {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback('📋 Qué hace / no hace', 'ayuda_que_hace'), Markup.button.callback('🧭 Flujo del reporte', 'ayuda_flujo')],
+    [Markup.button.callback('📸 Fotos', 'ayuda_fotos'), Markup.button.callback('🧪 Insumos', 'ayuda_insumos')],
+    [Markup.button.callback('📄 Formato de salida', 'ayuda_formato'), Markup.button.callback('📞 Contacto', 'ayuda_contacto')],
+    [Markup.button.callback('🏠 Menú principal', 'menu_principal')]
+  ]);
+}
+
+function ayudaSeccionKeyboard() {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback('⬅️ Volver a Ayuda', 'ayuda_menu')],
+    [Markup.button.callback('🏠 Menú principal', 'menu_principal')]
+  ]);
+}
+
+const AYUDA_SECCIONES = {
+  que_hace:
+    '📋 *¿Qué hace este bot?*\n\n' +
+    'Genera reportes técnicos profesionales (PDF y/o Word) de servicios de limpieza y desinfección, con fotos, insumos y firma incluidos.\n\n' +
+    '*¿Qué NO hace?*\n' +
+    'No corrige ni valida datos técnicos, no guarda historial permanente (si el bot se reinicia, un reporte a medias se pierde) y no reemplaza la firma física en el punto de servicio.',
+  flujo:
+    '🧭 *Flujo del reporte (12 pasos)*\n\n' +
+    'Cliente → Tipo de servicio → N° de reporte → Contacto → Ubicación → Equipo → Fecha → Horario → Técnicos → Observaciones → Fotos → Insumos\n\n' +
+    'Toca "📋 Nuevo Reporte" en el menú principal para comenzar.',
+  fotos:
+    '📸 *Sobre las fotos*\n\n' +
+    'Se piden entre *6 y 20 fotos* del trabajo (antes/durante/después). Haz clic en "Fotos Listo" cuando termines.',
+  insumos:
+    '🧪 *Sobre los insumos*\n\n' +
+    'Se agregan uno por uno con el formato:\n' +
+    '`Nombre | Lote | Vencimiento | Concentración | S/N`\n' +
+    '_(S/N = si el insumo está vencido, Sí o No)_',
+  formato:
+    '📄 *Formato de salida*\n\n' +
+    'Al finalizar puedes elegir generar el reporte en PDF, Word, o ambos.',
+  contacto:
+    '📞 *¿Problemas o dudas adicionales?*\n\n' +
+    '📞 +57 300 151 6187\n' +
+    '📧 inocuarldtotal@gmail.com',
+};
+
 // ============ COMANDOS ============
 
 bot.start((ctx) => {
@@ -79,20 +147,8 @@ bot.start((ctx) => {
     );
   }
 
-  ctx.reply(
-    '👋 *¡Bienvenido, tienes acceso!*\n' +
-    '*H&Y Mundo Servicios — Generador de Reportes*\n\n' +
-    `📌 Tu ID de Telegram: \`${userId}\`\n\n` +
-    '✅ Genera reportes PDF profesionales en minutos\n' +
-    '📸 Registro fotográfico embebido\n' +
-    '📋 Trazabilidad de insumos con lotes y vencimientos\n' +
-    '✍️ Firmas y certificación\n\n' +
-    '¿Qué deseas hacer?',
-    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-      [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
-      [Markup.button.callback('❌ Cancelar', 'cancelar')]
-    ]) }
-  );
+  const { text, keyboard } = mainMenuMessage(userId);
+  ctx.reply(text, { parse_mode: 'Markdown', ...keyboard });
 });
 
 bot.command('cancelar', (ctx) => {
@@ -102,34 +158,25 @@ bot.command('cancelar', (ctx) => {
 });
 
 bot.command('ayuda', (ctx) => {
-  ctx.reply(
-    '🆘 *Ayuda — Bot H&Y Generador de Reportes*\n\n' +
-    '*¿Qué hace este bot?*\n' +
-    'Genera reportes técnicos profesionales (PDF y/o Word) de servicios de limpieza y desinfección, con fotos, insumos y firma incluidos.\n\n' +
-    '*¿Qué NO hace?*\n' +
-    'No corrige ni valida datos técnicos, no guarda historial permanente (si el bot se reinicia, un reporte a medias se pierde) y no reemplaza la firma física en el punto de servicio.\n\n' +
-    '*Comandos disponibles:*\n' +
-    '/start — Inicia el bot o crea un nuevo reporte\n' +
-    '/cancelar — Cancela el reporte en curso\n' +
-    '/ayuda — Muestra este mensaje\n\n' +
-    '*Flujo del reporte (12 pasos):*\n' +
-    'Cliente → Tipo de servicio → N° de reporte → Contacto → Ubicación → Equipo → Fecha → Horario → Técnicos → Observaciones → Fotos → Insumos\n\n' +
-    '*Sobre las fotos:*\n' +
-    'Se piden entre *6 y 20 fotos* del trabajo (antes/durante/después). Haz clic en "Fotos Listo" cuando termines.\n\n' +
-    '*Sobre los insumos:*\n' +
-    'Se agregan uno por uno con el formato:\n' +
-    '`Nombre | Lote | Vencimiento | Concentración | S/N`\n' +
-    '_(S/N = si el insumo está vencido, Sí o No)_\n\n' +
-    '*Formato de salida:*\n' +
-    'Al finalizar puedes elegir generar el reporte en PDF, Word, o ambos.\n\n' +
-    '*¿Problemas o dudas adicionales?*\n' +
-    '📞 +57 300 151 6187\n' +
-    '📧 inocuarldtotal@gmail.com',
-    { parse_mode: 'Markdown' }
-  );
+  ctx.reply(AYUDA_MENU_TEXTO, { parse_mode: 'Markdown', ...ayudaMenuKeyboard() });
 });
 
 // ============ ACCIONES CON BOTONES ============
+
+bot.action('menu_principal', (ctx) => {
+  const userId = ctx.from.id;
+  const { text, keyboard } = mainMenuMessage(userId);
+  ctx.editMessageText(text, { parse_mode: 'Markdown', ...keyboard });
+});
+
+bot.action('ayuda_menu', (ctx) => {
+  ctx.editMessageText(AYUDA_MENU_TEXTO, { parse_mode: 'Markdown', ...ayudaMenuKeyboard() });
+});
+
+bot.action(/^ayuda_(que_hace|flujo|fotos|insumos|formato|contacto)$/, (ctx) => {
+  const seccion = AYUDA_SECCIONES[ctx.match[1]];
+  ctx.editMessageText(seccion, { parse_mode: 'Markdown', ...ayudaSeccionKeyboard() });
+});
 
 bot.action('nuevo_reporte', (ctx) => {
   const userId = ctx.from.id;
