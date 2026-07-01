@@ -129,6 +129,88 @@ const AYUDA_SECCIONES = {
     '📧 inocuarldtotal@gmail.com',
 };
 
+// ============ RESUMEN, EDICIÓN Y REUTILIZACIÓN DE DATOS ============
+
+const lastUsedData = {};
+const lastGeneratedDocs = {};
+
+function guardarUltimosDatos(userId, data) {
+  lastUsedData[userId] = {
+    cliente: data.cliente,
+    contacto: data.contacto,
+    ubicacion: data.ubicacion,
+    equipo: data.equipo,
+    tecnicos: data.tecnicos,
+  };
+}
+
+function buildResumenTexto(session) {
+  const d = session.data;
+  const fotosCount = (d.fotos && d.fotos.length) || 0;
+  const insumosCount = (session.insumos && session.insumos.length) || 0;
+  return (
+    '📝 *Resumen del reporte*\n\n' +
+    `*Cliente:* ${d.cliente || '—'}\n` +
+    `*Tipo de servicio:* ${d.tipoServicio || '—'}\n` +
+    `*N° Reporte:* ${d.reportNum || '—'}\n` +
+    `*Contacto:* ${d.contacto || '—'}\n` +
+    `*Ubicación:* ${d.ubicacion || '—'}\n` +
+    `*Equipo:* ${d.equipo || '—'}\n` +
+    `*Fecha:* ${d.fecha || '—'}\n` +
+    `*Horario:* ${d.horario || '—'}\n` +
+    `*Técnicos:* ${d.tecnicos || '—'}\n` +
+    `*Observaciones:* ${d.observaciones || '—'}\n` +
+    `*Fotos:* ${fotosCount}\n` +
+    `*Insumos:* ${insumosCount}\n\n` +
+    '¿Todo correcto?'
+  );
+}
+
+function resumenKeyboard() {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback('✏️ Editar datos', 'editar_datos_menu')],
+    [Markup.button.callback('📸 Rehacer fotos', 'rehacer_fotos'), Markup.button.callback('🧪 Rehacer insumos', 'rehacer_insumos')],
+    [Markup.button.callback('✅ Confirmar y Generar', 'elegir_formato')],
+    [Markup.button.callback('❌ Cancelar', 'cancelar')]
+  ]);
+}
+
+const CAMPOS_EDITABLES = {
+  cliente: 'Cliente',
+  tipoServicio: 'Tipo de servicio',
+  reportNum: 'N° de Reporte',
+  contacto: 'Contacto',
+  ubicacion: 'Ubicación',
+  equipo: 'Equipo',
+  fecha: 'Fecha',
+  horario: 'Horario',
+  tecnicos: 'Técnicos',
+  observaciones: 'Observaciones',
+};
+
+function editarDatosKeyboard() {
+  const entries = Object.entries(CAMPOS_EDITABLES);
+  const rows = [];
+  for (let i = 0; i < entries.length; i += 2) {
+    const row = [Markup.button.callback(entries[i][1], `editar_campo_${entries[i][0]}`)];
+    if (entries[i + 1]) row.push(Markup.button.callback(entries[i + 1][1], `editar_campo_${entries[i + 1][0]}`));
+    rows.push(row);
+  }
+  rows.push([Markup.button.callback('⬅️ Volver al resumen', 'ver_resumen')]);
+  return Markup.inlineKeyboard(rows);
+}
+
+function pedirCliente(ctx) {
+  ctx.editMessageText(
+    '📝 *Nuevo Reporte* — _Paso 1 de 12_\n\n' +
+    '¿Cuál es el nombre del cliente?\n' +
+    '_Ej: Cocorollo Palmas S.A.S_',
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ]) }
+  );
+}
+
 // ============ COMANDOS ============
 
 bot.start((ctx) => {
@@ -186,20 +268,69 @@ bot.action('nuevo_reporte', (ctx) => {
     data: {}
   };
 
+  const ultimo = lastUsedData[userId];
+  if (ultimo) {
+    ctx.editMessageText(
+      '📝 *Nuevo Reporte*\n\n' +
+      '¿Es para el mismo cliente del último reporte?\n\n' +
+      `*Cliente:* ${ultimo.cliente}\n*Ubicación:* ${ultimo.ubicacion}\n*Equipo:* ${ultimo.equipo}`,
+      { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+        [Markup.button.callback('♻️ Sí, usar los mismos datos', 'usar_mismos_datos')],
+        [Markup.button.callback('🆕 No, es diferente', 'datos_nuevos')],
+        [Markup.button.callback('❌ Cancelar', 'cancelar')]
+      ]) }
+    );
+    return;
+  }
+
+  pedirCliente(ctx);
+});
+
+bot.action('datos_nuevos', (ctx) => {
+  const userId = ctx.from.id;
+  userSessions[userId] = { step: 'cliente', data: {} };
+  pedirCliente(ctx);
+});
+
+bot.action('usar_mismos_datos', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  const ultimo = lastUsedData[userId];
+  if (!session || !ultimo) return ctx.answerCbQuery('No hay datos previos disponibles.', true);
+
+  session.data = { ...ultimo };
+  session.reusarDatos = true;
+  session.step = 'tipoServicio';
+
   ctx.editMessageText(
-    '📝 *Nuevo Reporte* — _Paso 1 de 12_\n\n' +
-    '¿Cuál es el nombre del cliente?\n' +
-    '_Ej: Cocorollo Palmas S.A.S_',
+    `✅ Cliente: *${session.data.cliente}*\n` +
+    '_Contacto, ubicación, equipo y técnicos reutilizados del último reporte._\n\n' +
+    '_Paso 2 de 12_\n¿Tipo de servicio?',
     { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('🔧 Correctiva', 'tipo_servicio_correctiva'), Markup.button.callback('📅 Preventiva', 'tipo_servicio_preventiva')],
       [Markup.button.callback('❌ Cancelar', 'cancelar')]
     ]) }
   );
 });
 
 bot.action('cancelar', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.reply(
+    '⚠️ *¿Seguro que deseas cancelar?*\nPerderás todo lo capturado en este reporte.',
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('✅ Sí, cancelar', 'cancelar_confirmado'), Markup.button.callback('◀️ No, continuar', 'cancelar_abortar')]
+    ]) }
+  );
+});
+
+bot.action('cancelar_confirmado', (ctx) => {
   const userId = ctx.from.id;
   delete userSessions[userId];
-  ctx.editMessageText('❌ Reporte cancelado.');
+  ctx.editMessageText('❌ Reporte cancelado. Usa /start para comenzar de nuevo.');
+});
+
+bot.action('cancelar_abortar', (ctx) => {
+  ctx.editMessageText('👍 Reporte activo, continúa donde estabas.');
 });
 
 bot.action(/^tipo_servicio_(.+)$/, (ctx) => {
@@ -208,6 +339,13 @@ bot.action(/^tipo_servicio_(.+)$/, (ctx) => {
   const tipo = ctx.match[1];
 
   session.data.tipoServicio = tipo === 'correctiva' ? 'Limpieza Correctiva' : 'Limpieza Preventiva';
+
+  if (session.editing === 'tipoServicio') {
+    session.editing = null;
+    ctx.editMessageText(buildResumenTexto(session), { parse_mode: 'Markdown', ...resumenKeyboard() });
+    return;
+  }
+
   session.step = 'reportNum';
 
   ctx.editMessageText(
@@ -235,6 +373,12 @@ bot.action('fotos_listo', (ctx) => {
   session.data.fotos = session.fotos.array;
   session.step = 'insumos';
 
+  if (session.volverAResumen) {
+    session.volverAResumen = false;
+    ctx.editMessageText(buildResumenTexto(session), { parse_mode: 'Markdown', ...resumenKeyboard() });
+    return;
+  }
+
   ctx.editMessageText(
     `✅ *${fotosCount} fotos guardadas.*\n\n` +
     '_Paso 12 de 12_\n\n' +
@@ -244,9 +388,92 @@ bot.action('fotos_listo', (ctx) => {
     '_Ejemplo:_\n' +
     '`LK Econo Chlor | 251636 | 29/08/2026 | 6% | N`\n' +
     '`Alumi Clean | 249791 | 31/07/2026 | 3% | N`\n\n' +
-    '_Cuando termines, haz clic en "Generar Reporte"._',
+    '_Cuando termines, haz clic en "Ver Resumen"._',
     { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-      [Markup.button.callback('📤 Generar Reporte', 'elegir_formato')],
+      [Markup.button.callback('📝 Ver Resumen', 'ver_resumen')],
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ]) }
+  );
+});
+
+bot.action('ver_resumen', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || session.step !== 'insumos') {
+    return ctx.answerCbQuery('Por favor completa los datos del reporte primero.', true);
+  }
+  ctx.editMessageText(buildResumenTexto(session), { parse_mode: 'Markdown', ...resumenKeyboard() });
+});
+
+bot.action('editar_datos_menu', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session) return ctx.answerCbQuery('Sesión no encontrada. Usa /start.', true);
+  ctx.editMessageText('✏️ *¿Qué dato quieres corregir?*', { parse_mode: 'Markdown', ...editarDatosKeyboard() });
+});
+
+bot.action(/^editar_campo_(cliente|tipoServicio|reportNum|contacto|ubicacion|equipo|fecha|horario|tecnicos|observaciones)$/, (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  const campo = ctx.match[1];
+  if (!session) return ctx.answerCbQuery('Sesión no encontrada. Usa /start.', true);
+
+  if (campo === 'tipoServicio') {
+    session.editing = 'tipoServicio';
+    ctx.editMessageText(
+      `✏️ *Tipo de servicio actual:* ${session.data.tipoServicio || '—'}\n\n¿Cuál es el nuevo tipo?`,
+      { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+        [Markup.button.callback('🔧 Correctiva', 'tipo_servicio_correctiva'), Markup.button.callback('📅 Preventiva', 'tipo_servicio_preventiva')],
+        [Markup.button.callback('⬅️ Cancelar edición', 'editar_datos_menu')]
+      ]) }
+    );
+    return;
+  }
+
+  session.editing = campo;
+  ctx.editMessageText(
+    `✏️ *${CAMPOS_EDITABLES[campo]} actual:* ${session.data[campo] || '—'}\n\nEscribe el nuevo valor:`,
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('⬅️ Cancelar edición', 'editar_datos_menu')]
+    ]) }
+  );
+});
+
+bot.action('rehacer_fotos', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || session.step !== 'insumos') return ctx.answerCbQuery('Sesión no válida.', true);
+
+  session.fotos = { array: [] };
+  session.step = 'fotos';
+  session.volverAResumen = true;
+
+  ctx.editMessageText(
+    '📸 *Rehaciendo el registro fotográfico*\n\n' +
+    'Envía entre *6 y 20 fotos* nuevas del trabajo realizado.\n\n' +
+    '_Cuando termines, haz clic en "Fotos Listo"._',
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('✅ Fotos Listo', 'fotos_listo')],
+      [Markup.button.callback('❌ Cancelar', 'cancelar')]
+    ]) }
+  );
+});
+
+bot.action('rehacer_insumos', (ctx) => {
+  const userId = ctx.from.id;
+  const session = userSessions[userId];
+  if (!session || session.step !== 'insumos') return ctx.answerCbQuery('Sesión no válida.', true);
+
+  session.insumos = [];
+  session.data.insumos = [];
+
+  ctx.editMessageText(
+    '🧪 *Rehaciendo insumos*\n\n' +
+    'Envía cada insumo en el formato:\n' +
+    '`Nombre | Lote | Vencimiento | Concentración | Vencido(S/N)`\n\n' +
+    '_Cuando termines, haz clic en "Ver Resumen"._',
+    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
+      [Markup.button.callback('📝 Ver Resumen', 'ver_resumen')],
       [Markup.button.callback('❌ Cancelar', 'cancelar')]
     ]) }
   );
@@ -268,20 +495,25 @@ bot.action('generar_pdf', async (ctx) => {
 
   try {
     await ctx.answerCbQuery('⏳ Generando PDF...');
+    await ctx.sendChatAction('upload_document');
 
     const htmlContent = buildHTML(session.data);
     const filename = `reporte-${session.data.reportNum}-${Date.now()}.pdf`;
     const pdfPath = await htmlToPdf(htmlContent, filename);
+    const pdfBuffer = fs.readFileSync(pdfPath);
+    fs.unlink(pdfPath, () => {});
+    const pdfFilename = `reporte-${session.data.reportNum}.pdf`;
 
     await ctx.replyWithDocument(
-      { source: pdfPath },
+      { source: pdfBuffer, filename: pdfFilename },
       {
         caption: `📄 Reporte #${session.data.reportNum} — ${session.data.cliente}`,
         parse_mode: 'Markdown'
       }
     );
 
-    fs.unlink(pdfPath, () => {});
+    lastGeneratedDocs[userId] = { pdfBuffer, pdfFilename, cliente: session.data.cliente, reportNum: session.data.reportNum };
+    guardarUltimosDatos(userId, session.data);
     delete userSessions[userId];
 
     await ctx.reply(
@@ -289,6 +521,7 @@ bot.action('generar_pdf', async (ctx) => {
       '¿Deseas crear otro?',
       { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
         [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+        [Markup.button.callback('🔁 Reenviar', 'reenviar_ultimo')],
         [Markup.button.callback('❌ Salir', 'cancelar')]
       ]) }
     );
@@ -334,6 +567,7 @@ bot.action('generar_word', async (ctx) => {
 
   try {
     await ctx.answerCbQuery('⏳ Generando Word...');
+    await ctx.sendChatAction('upload_document');
     const docBuffer = await buildDOCX(session.data);
     const docFilename = `reporte-${session.data.reportNum}.docx`;
 
@@ -342,11 +576,14 @@ bot.action('generar_word', async (ctx) => {
       { caption: `📝 Reporte #${session.data.reportNum} — ${session.data.cliente}`, parse_mode: 'Markdown' }
     );
 
+    lastGeneratedDocs[userId] = { docBuffer, docFilename, cliente: session.data.cliente, reportNum: session.data.reportNum };
+    guardarUltimosDatos(userId, session.data);
     delete userSessions[userId];
     await ctx.reply(
       '✅ *¡Reporte Word generado exitosamente!*\n\n¿Deseas crear otro?',
       { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
         [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+        [Markup.button.callback('🔁 Reenviar', 'reenviar_ultimo')],
         [Markup.button.callback('❌ Salir', 'cancelar')]
       ]) }
     );
@@ -369,35 +606,66 @@ bot.action('generar_ambos', async (ctx) => {
 
   try {
     await ctx.answerCbQuery('⏳ Generando PDF y Word...');
+    await ctx.sendChatAction('upload_document');
 
     const htmlContent = buildHTML(session.data);
     const pdfFilename = `reporte-${session.data.reportNum}-${Date.now()}.pdf`;
     const pdfPath = await htmlToPdf(htmlContent, pdfFilename);
+    const pdfBuffer = fs.readFileSync(pdfPath);
+    fs.unlink(pdfPath, () => {});
     const docBuffer = await buildDOCX(session.data);
     const docFilename = `reporte-${session.data.reportNum}.docx`;
 
     await ctx.replyWithDocument(
-      { source: pdfPath },
+      { source: pdfBuffer, filename: `reporte-${session.data.reportNum}.pdf` },
       { caption: `📄 Reporte #${session.data.reportNum} — ${session.data.cliente} (PDF)`, parse_mode: 'Markdown' }
     );
-    fs.unlink(pdfPath, () => {});
 
     await ctx.replyWithDocument(
       { source: docBuffer, filename: docFilename },
       { caption: `📝 Reporte #${session.data.reportNum} — ${session.data.cliente} (Word)`, parse_mode: 'Markdown' }
     );
 
+    lastGeneratedDocs[userId] = {
+      pdfBuffer, pdfFilename: `reporte-${session.data.reportNum}.pdf`,
+      docBuffer, docFilename,
+      cliente: session.data.cliente, reportNum: session.data.reportNum
+    };
+    guardarUltimosDatos(userId, session.data);
     delete userSessions[userId];
     await ctx.reply(
       '✅ *¡Ambos formatos generados!*\n\n¿Deseas crear otro?',
       { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
         [Markup.button.callback('📋 Nuevo Reporte', 'nuevo_reporte')],
+        [Markup.button.callback('🔁 Reenviar', 'reenviar_ultimo')],
         [Markup.button.callback('❌ Salir', 'cancelar')]
       ]) }
     );
   } catch (error) {
     console.error('Error generando reportes:', error);
     ctx.answerCbQuery('❌ Error al generar los reportes. Intenta nuevamente.', true);
+  }
+});
+
+bot.action('reenviar_ultimo', async (ctx) => {
+  const userId = ctx.from.id;
+  const doc = lastGeneratedDocs[userId];
+  if (!doc) {
+    return ctx.answerCbQuery('No hay ningún reporte reciente para reenviar.', true);
+  }
+
+  await ctx.answerCbQuery('📤 Reenviando...');
+  if (doc.pdfBuffer) {
+    await ctx.replyWithDocument(
+      { source: doc.pdfBuffer, filename: doc.pdfFilename },
+      { caption: `📄 Reporte #${doc.reportNum} — ${doc.cliente}`, parse_mode: 'Markdown' }
+    );
+  }
+  if (doc.docBuffer) {
+    await ctx.replyWithDocument(
+      { source: doc.docBuffer, filename: doc.docFilename },
+      { caption: `📝 Reporte #${doc.reportNum} — ${doc.cliente}`, parse_mode: 'Markdown' }
+    );
   }
 });
 
@@ -413,6 +681,13 @@ bot.on('text', async (ctx) => {
   }
 
   const text = ctx.message.text.trim();
+
+  if (session.editing) {
+    session.data[session.editing] = text;
+    session.editing = null;
+    ctx.reply(buildResumenTexto(session), { parse_mode: 'Markdown', ...resumenKeyboard() });
+    return;
+  }
 
   switch (session.step) {
     case 'cliente':
@@ -432,12 +707,22 @@ bot.on('text', async (ctx) => {
 
     case 'reportNum':
       session.data.reportNum = text;
-      session.step = 'contacto';
-      ctx.reply(
-        '*Paso 4 de 12*\n' +
-        '¿Contacto en sitio?\n_Ej: Sergio Gómez / Carlos Muñoz_',
-        { parse_mode: 'Markdown' }
-      );
+      if (session.reusarDatos) {
+        session.step = 'fecha';
+        ctx.reply(
+          `✅ N° Reporte: *${text}*\n` +
+          `_Contacto: ${session.data.contacto} · Ubicación: ${session.data.ubicacion} · Equipo: ${session.data.equipo}_\n\n` +
+          '*Paso 7 de 12*\n¿Fecha de ejecución?\n_Ej: 28 de Abril de 2026_',
+          { parse_mode: 'Markdown' }
+        );
+      } else {
+        session.step = 'contacto';
+        ctx.reply(
+          '*Paso 4 de 12*\n' +
+          '¿Contacto en sitio?\n_Ej: Sergio Gómez / Carlos Muñoz_',
+          { parse_mode: 'Markdown' }
+        );
+      }
       break;
 
     case 'contacto':
@@ -482,12 +767,22 @@ bot.on('text', async (ctx) => {
 
     case 'horario':
       session.data.horario = text;
-      session.step = 'tecnicos';
-      ctx.reply(
-        '*Paso 9 de 12*\n' +
-        '¿Técnicos participantes?\n_Separados por coma. Ej: Geimer España, Juan Cano_',
-        { parse_mode: 'Markdown' }
-      );
+      if (session.reusarDatos) {
+        session.step = 'observaciones';
+        ctx.reply(
+          `✅ Horario: *${text}*\n` +
+          `_Técnicos: ${session.data.tecnicos}_\n\n` +
+          '*Paso 10 de 12*\n¿Observaciones adicionales?\n_Escribe "—" si no hay._',
+          { parse_mode: 'Markdown' }
+        );
+      } else {
+        session.step = 'tecnicos';
+        ctx.reply(
+          '*Paso 9 de 12*\n' +
+          '¿Técnicos participantes?\n_Separados por coma. Ej: Geimer España, Juan Cano_',
+          { parse_mode: 'Markdown' }
+        );
+      }
       break;
 
     case 'tecnicos':
@@ -537,9 +832,9 @@ bot.on('text', async (ctx) => {
         ctx.reply(
           `✅ *Insumo agregado:* ${parts[0]}\n\n` +
           `*Insumos registrados (${session.insumos.length}):*\n${lista}\n\n` +
-          '_Agrega otro insumo o haz clic en "Generar Reporte"._',
+          '_Agrega otro insumo o haz clic en "Ver Resumen"._',
           { parse_mode: 'Markdown', ...Markup.inlineKeyboard([
-            [Markup.button.callback('📤 Generar Reporte', 'elegir_formato')],
+            [Markup.button.callback('📝 Ver Resumen', 'ver_resumen')],
             [Markup.button.callback('❌ Cancelar', 'cancelar')]
           ]) }
         );
